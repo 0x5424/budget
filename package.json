@@ -1,7 +1,6 @@
 {
   "type": "module",
-  "name": "svlt",
-  "description": "bootstrap new svelte project with as few required dependencies",
+  "name": "budget",
   "scripts": {
     "start": "vite",
     "check": "svelte-check"
