@@ -1,2 +1,1 @@
-// config
 export * from './routing'

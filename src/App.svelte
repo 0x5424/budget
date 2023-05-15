@@ -2,6 +2,7 @@
   import { currentPage } from 'src/stores'
 
   import Header from './Header.svelte'
+  import Input from 'src/pages/Input.svelte'
 </script>
 
 <main>
@@ -10,7 +11,7 @@
   {#if $currentPage === 'DASHBOARD'}
     dashboard
   {:else if $currentPage === 'INPUT'}
-    input
+    <Input />
   {:else if $currentPage === 'CONFIG'}
     config
   {/if}
