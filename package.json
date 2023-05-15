@@ -1,0 +1,15 @@
+{
+  "type": "module",
+  "name": "svlt",
+  "description": "bootstrap new svelte project with as few required dependencies",
+  "scripts": {
+    "start": "vite",
+    "check": "svelte-check"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "latest",
+    "svelte": "latest",
+    "svelte-check": "latest",
+    "vite": "latest"
+  }
+}
