@@ -1,4 +1,4 @@
 import './app.css'
 import App from './App.svelte'
 
-new App({ target: document.body, props: { name: 'world' } })
+new App({ target: document.body })
