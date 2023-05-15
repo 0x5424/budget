@@ -1,8 +1,12 @@
 <script lang=ts>
   import { currentPage } from 'src/stores'
+
+  import Header from './Header.svelte'
 </script>
 
 <main>
+  <Header />
+
   {#if $currentPage === 'DASHBOARD'}
     dashboard
   {:else if $currentPage === 'INPUT'}
@@ -14,9 +18,7 @@
 
 <style>
   main {
-    text-align: center;
-    padding: 1em;
-    max-width: 240px;
-    margin: 0 auto;
+    width: 100%;
+    height: 100%;
   }
 </style>
