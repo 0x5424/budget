@@ -1,10 +1,20 @@
 <script lang=ts>
-  let accountName
-  let sign
-  import { accounts } from 'src/stores'
+  import { today, accounts, currencies } from 'src/stores'
+
+  let accountName: void | string
+  let currencyName: string = $currencies[0] || ''
+  let rawAmount: void | string
+  let label: string
+  let date: string = $today.toISOString().slice(0, 10)
+  let sign: boolean
 
   $: {
-    console.log('yo this our account name', accountName)
+    console.log('accountName', accountName)
+    console.log('currencyName', currencyName)
+    console.log('rawAmount', rawAmount)
+    console.log('label', label)
+    console.log('sign', sign)
+    console.log('date', date)
   }
 </script>
 
@@ -18,16 +28,18 @@
             type=text
             id=account
             name=account
-            list=accounts
+            list={$accounts.length ? 'accounts' : null}
             class='block w-full rounded-sm sm:text-sm'
-            placeholder='Leave blank for cash'
+            placeholder='Or enter new name'
             bind:value={accountName}
           />
-          <datalist id=accounts>
-            {#each ['foo', 'bar', 'baz'] as accountName}
-              <option value={accountName} />
-            {/each}
-          </datalist>
+          {#if !!$accounts.length}
+            <datalist id=accounts>
+              {#each $accounts as accountName}
+                <option value={accountName} />
+              {/each}
+            </datalist>
+          {/if}
         </div>
       </div>
       <div>
@@ -41,13 +53,15 @@
             list=currencies
             class='block w-full rounded-sm sm:text-sm'
             placeholder='Req.'
-            bind:value={accountName}
+            bind:value={currencyName}
           />
-          <datalist id=currencies>
-            {#each ['jpy', 'usd', 'btc', 'eth'] as currencyName}
-              <option value={currencyName} />
-            {/each}
-          </datalist>
+          {#if !!$currencies.length}
+            <datalist id=currencies>
+              {#each $currencies as currencyName}
+                <option value={currencyName} />
+              {/each}
+            </datalist>
+          {/if}
         </div>
       </div>
       <div class=md:col-start-2>
@@ -71,7 +85,7 @@
             step=1
             inputmode=decimal
             class='block w-full rounded-sm sm:text-sm'
-            bind:value={accountName}
+            bind:value={rawAmount}
           />
         </div>
       </div>
@@ -84,17 +98,26 @@
             name=label
             class='block w-full rounded-sm sm:text-sm'
             placeholder='Arbitrary label for personal reference'
-            bind:value={accountName}
+            bind:value={label}
           />
         </div>
       </div>
     </div>
   </section>
   <section class='mt-8 grid grid-cols-3 sm:grid-cols-5'>
+    <div class='col-span-2 md:col-start-2 flex justify-end'>
+      <input
+        type=date
+        id=entryDate
+        name=entryDate
+        bind:value={date}
+        class='rounded-sm sm:text-sm'
+      />
+    </div>
     <div class='col-start-3 md:col-start-4 flex justify-end'>
       <button
         type=submit
-        disabled
+        disabled={currencyName === '' || !rawAmount}
         class='rounded-sm px-3 py-2 text-sm font-semibold shadow-sm hover:shadow-lg'
       >
         Save
@@ -103,7 +126,7 @@
   </section>
 </form>
 
-<style lang=postcss>
+<style>
   span[title=Required]::before {
     padding: 0.2rem;
     font-size: 1.125rem;
@@ -127,7 +150,7 @@
 
   button[type=submit]:disabled {
     cursor: not-allowed;
-    background-color: theme(colors.orange.400);
+    opacity: 0.5;
   }
 
   button[type=submit]:hover:not(:disabled) {
