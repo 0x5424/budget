@@ -87,9 +87,7 @@ function getDbAttributes(db: DbShape, name: string) {
 
 /** list of actual accounts present, derived from parsed entries */
 export const accounts = derived([DB], ([$DB]) => {
-  const asSet = new Set(getDbAttributes($DB, 'account'))
-  console.log(asSet)
-  return Array.from(asSet)
+  return Array.from(new Set(getDbAttributes($DB, 'account')))
 })
 
 /** list of all known currencies, derived from parsed entries */

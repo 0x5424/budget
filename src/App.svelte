@@ -3,6 +3,7 @@
 
   import Header from './Header.svelte'
   import Input from 'src/pages/Input.svelte'
+  import Config from 'src/pages/Config.svelte'
 </script>
 
 <main>
@@ -13,7 +14,7 @@
   {:else if $currentPage === 'INPUT'}
     <Input />
   {:else if $currentPage === 'CONFIG'}
-    config
+    <Config />
   {/if}
 </main>
 

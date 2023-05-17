@@ -2,6 +2,8 @@
  * Rate is arbitrary, but **MUST** always be relative to the same currency.
  *
  * @example If opting to base against USD all subsequent txns should use a rate relative to USD, FOREVER!! (known limitation)
+ *
+ * @note-to-future-self this is an active design choice......... don't preoptimize plz.............................................
  */
 type Rate = 1 | number
 

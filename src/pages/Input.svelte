@@ -53,7 +53,7 @@
 <form bind:this={form} class='container' on:submit|preventDefault={onSubmit}>
   <section class='mt-8 pb-10 border-b border-gray-900/10'>
     <div class='grid grid-cols-3 sm:grid-cols-5 gap-x-6 gap-y-8'>
-      <div class='col-span-2 md:col-start-2'>
+      <div class='col-span-2 sm:col-start-2'>
         <label for=account class='block text-sm font-medium leading-6'>Account Name? <span title=Required/></label>
         <div class=mt-2>
           <input
@@ -96,7 +96,7 @@
           {/if}
         </div>
       </div>
-      <div class=md:col-start-2>
+      <div class=sm:col-start-2>
         <label class='flex flex-col text-sm font-medium leading-6'>
           Income?
           <input id=sign name=sign type=checkbox class='mx-3 my-2 rounded-sm' bind:checked={sign}>
@@ -121,7 +121,7 @@
           />
         </div>
       </div>
-      <div class='col-span-3 md:col-start-2'>
+      <div class='col-span-3 sm:col-start-2'>
         <label for=label class='block text-sm font-medium leading-6'>Label?</label>
         <div class=mt-2>
           <input
@@ -137,7 +137,7 @@
     </div>
   </section>
   <section class='mt-8 grid grid-cols-3 sm:grid-cols-5'>
-    <div class='col-span-2 md:col-start-2 flex justify-end'>
+    <div class='col-span-2 sm:col-start-2 flex justify-end'>
       <input
         type=date
         id=entryDate
@@ -146,7 +146,7 @@
         class='rounded-sm sm:text-sm'
       />
     </div>
-    <div class='col-start-3 md:col-start-4 flex justify-end'>
+    <div class='col-start-3 sm:col-start-4 flex justify-end'>
       <button
         type=submit
         disabled={currencyName === '' || !rawAmount || accountName === ''}
