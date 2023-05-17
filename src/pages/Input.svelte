@@ -1,7 +1,10 @@
 <script lang=ts>
-  import { today, accounts, currencies } from 'src/stores'
+  import type { Transaction } from 'src/lib/types'
+  import { today, accounts, currencies, DB, knownAccounts } from 'src/stores'
 
-  let accountName: void | string
+  let form: HTMLFormElement
+
+  let accountName: string = $knownAccounts[0] || ''
   let currencyName: string = $currencies[0] || ''
   let rawAmount: void | string
   let label: string
@@ -15,14 +18,43 @@
     console.log('label', label)
     console.log('sign', sign)
     console.log('date', date)
+
+    console.log('DB!!', $DB)
+  }
+
+  function onSubmit() {
+    if (!$knownAccounts.includes(accountName)) $knownAccounts = [...$knownAccounts, accountName]
+    const multiplyBy = sign ? -1 : 1
+
+    const givenDate = new Date(date)
+    const newEntry: Transaction = {
+      year: givenDate.getFullYear(),
+      month: givenDate.getMonth(),
+      date: givenDate.getDate(),
+      currency: currencyName,
+      account: accountName,
+      amount: multiplyBy * Number(rawAmount),
+      rate: 1
+    }
+
+    if (label && label !== '') newEntry.label = label
+    const currentValues = $DB[accountName || ''] || []
+
+    $DB = {
+      ...$DB,
+      [accountName]: [...currentValues, newEntry]
+    }
+
+    // then reset
+    form.reset()
   }
 </script>
 
-<form class='container' on:submit|preventDefault>
+<form bind:this={form} class='container' on:submit|preventDefault={onSubmit}>
   <section class='mt-8 pb-10 border-b border-gray-900/10'>
     <div class='grid grid-cols-3 sm:grid-cols-5 gap-x-6 gap-y-8'>
       <div class='col-span-2 md:col-start-2'>
-        <label for=account class='block text-sm font-medium leading-6'>Account Name?</label>
+        <label for=account class='block text-sm font-medium leading-6'>Account Name? <span title=Required/></label>
         <div class=mt-2>
           <input
             type=text
@@ -43,7 +75,7 @@
         </div>
       </div>
       <div>
-        <label for=currency class='block text-sm font-medium leading-6'>Currency <span class=text-rose-500 title=Required/></label>
+        <label for=currency class='block text-sm font-medium leading-6'>Currency <span title=Required/></label>
         <div class=mt-2>
           <input
             type=text
@@ -74,7 +106,7 @@
         </label>
       </div>
       <div class=col-span-2>
-        <label for=rawAmount class='block text-sm font-medium leading-6'>Amount <span class=text-rose-500 title=Required/></label>
+        <label for=rawAmount class='block text-sm font-medium leading-6'>Amount <span title=Required/></label>
         <div class=mt-2>
           <input
             type=number
@@ -117,7 +149,7 @@
     <div class='col-start-3 md:col-start-4 flex justify-end'>
       <button
         type=submit
-        disabled={currencyName === '' || !rawAmount}
+        disabled={currencyName === '' || !rawAmount || accountName === ''}
         class='rounded-sm px-3 py-2 text-sm font-semibold shadow-sm hover:shadow-lg'
       >
         Save
@@ -131,6 +163,7 @@
     padding: 0.2rem;
     font-size: 1.125rem;
     content: '*';
+    color: red;
   }
 
   button {
@@ -139,7 +172,7 @@
 
   /**
    * supplying all the hover states in just tailwind is ugly & too verbose (ie. hover but NOT disabled)
-   * maybe theres a better way...
+   * maybe theres a better way... idk it yet
    *
    * class='rounded-sm px-3 py-2 shadow-sm hover:shadow-lg disabled:bg-orange-400 text-sm font-semibold text-white bg-[var(--color-brand)] hover:bg-white hover:text-[var(--color-brand)]'
    */
