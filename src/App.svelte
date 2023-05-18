@@ -3,7 +3,7 @@
 
   import Header from './Header.svelte'
   import Input from 'src/pages/Input.svelte'
-  import Config from 'src/pages/Config.svelte'
+  import Settings from 'src/pages/Settings.svelte'
 </script>
 
 <main>
@@ -13,8 +13,8 @@
     dashboard
   {:else if $currentPage === 'INPUT'}
     <Input />
-  {:else if $currentPage === 'CONFIG'}
-    <Config />
+  {:else if $currentPage === 'SETTINGS'}
+    <Settings />
   {/if}
 </main>
 

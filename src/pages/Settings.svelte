@@ -16,8 +16,8 @@
   <header class='mt-8 pb-10 border-b border-gray-900/01'>
     <div class='grid grid-cols-3 sm:grid-cols-5 gap-x-6 gap-y-8'>
       <div class='col-span-3 md:col-start-2'>
-        <h2 class='text-base font-semibold leading-7 text-gray-900'>Application Configuration</h2>
-        <p class='mt-1 max-w-2xl text-sm leading-6 text-gray-500'>Various configs altering calculation algorithms.</p>
+        <h2 class='text-base font-semibold leading-7 text-gray-900'>Settings</h2>
+        <p class='mt-1 max-w-2xl text-sm leading-6 text-gray-500'>App-wide settings altering exepnse calculation.</p>
       </div>
     </div>
   </header>
