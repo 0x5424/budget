@@ -2,28 +2,25 @@
   import type { Transaction } from 'src/lib/types'
   import { today, accounts, currencies, DB, knownAccounts } from 'src/stores'
 
-  let form: HTMLFormElement
-
   let accountName: string = $knownAccounts[0] || ''
   let currencyName: string = $currencies[0] || ''
   let rawAmount: void | string
-  let label: string
+  let sign = false
+  let label = ''
   let date: string = $today.toISOString().slice(0, 10)
-  let sign: boolean
 
-  $: {
-    console.log('accountName', accountName)
-    console.log('currencyName', currencyName)
-    console.log('rawAmount', rawAmount)
-    console.log('label', label)
-    console.log('sign', sign)
-    console.log('date', date)
-
-    console.log('DB!!', $DB)
-  }
+  // $: {
+  //   console.table({
+  //     accountName,
+  //     currencyName,
+  //     rawAmount,
+  //     label,
+  //     sign,
+  //     date,
+  //   })
+  // }
 
   function onSubmit() {
-    if (!$knownAccounts.includes(accountName)) $knownAccounts = [...$knownAccounts, accountName]
     const multiplyBy = sign ? -1 : 1
 
     const givenDate = new Date(date)
@@ -37,20 +34,28 @@
       rate: 1
     }
 
-    if (label && label !== '') newEntry.label = label
-    const currentValues = $DB[accountName || ''] || []
+    if (label !== '') newEntry.label = label
 
-    $DB = {
-      ...$DB,
-      [accountName]: [...currentValues, newEntry]
-    }
+    /** update stores */
+    // DB.add(newEntry)
+    let newState = [newEntry]
+    if ($DB[accountName]) newState = [...$DB[accountName], ...newState]
+    $DB = { ...$DB, [accountName]: newState }
+    if (!$knownAccounts.includes(accountName)) $knownAccounts = [...$knownAccounts, accountName]
 
-    // then reset
-    form.reset()
+    /**
+     * then reset relevant form values
+     * @note (form.reset doesn't reset svelte vars)
+     */
+    // keep account, currency
+    rawAmount = null
+    sign = false
+    label = ''
+    // keep date
   }
 </script>
 
-<form bind:this={form} class='container' on:submit|preventDefault={onSubmit}>
+<form class='container' on:submit|preventDefault={onSubmit}>
   <section class='mt-8 pb-10 border-b border-gray-900/10'>
     <div class='grid grid-cols-3 sm:grid-cols-5 gap-x-6 gap-y-8'>
       <div class='col-span-2 sm:col-start-2'>
@@ -65,7 +70,7 @@
             placeholder='Or enter new name'
             bind:value={accountName}
           />
-          {#if !!$accounts.length}
+          {#if $accounts.length}
             <datalist id=accounts>
               {#each $accounts as accountName}
                 <option value={accountName} />

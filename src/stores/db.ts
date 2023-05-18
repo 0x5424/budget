@@ -36,22 +36,37 @@ type DbShape = Record<string, Transaction[]>
  */
 export const knownAccounts = writableStorage('db/knownAccounts', [] as string[])
 
-/**
- * collection (record) of writable stores mapped to strings.
- * when using this pattern, must be careful to not to update any of the storageKeys in localstorage elsewhere, or data will get desynced
- * suggestion: If needing to subscribe to the changes of just one of the values, use a derived store instead
- *
- * @note limitation: if the initial storageKeys array is updated, requires a page refresh to have new contents reflected
- */
-function writableRecord<T>(storageKeys: string[], initialValue: T, localStoragePrefix = 'db/accounts'): Writable<T> {
-  let value = !storageKeys.length ? initialValue : Object.fromEntries(storageKeys.map(suffix => {
-    const localStorageKey = `${localStoragePrefix}/${suffix}`
-    const startingValue = JSON.parse(localStorage.getItem(localStorageKey)) || localStorage.setItem(localStorageKey, '')
-    return [suffix, startingValue || '']
-  })) as T
-  let subs: Subscriber<T>[] = []
+/** small helper function to skip updating localstorage for non-updated values */
+function shouldUpdateTransactionStore(oldState: Transaction[], newState: Transaction[]) {
+  const sortedA = JSON.stringify([...oldState].sort())
+  const sortedB = JSON.stringify([...newState].sort())
 
-  const subscribe = (handler: Subscriber<T>) => {
+  return sortedA !== sortedB
+}
+
+/**
+ * collection accountNames mapped to namespaced stores
+ */
+function namespacedDb(accountNames: string[], initialValue: {}) {
+  let value = !accountNames.length ? initialValue : Object.fromEntries(accountNames.map(accountName => {
+    // Iterate all months (0-indexed) and populate the store if there's a localstorage key present.
+    // This is done to save on storage space, as we are able to persist ~12*38k entries in total
+    // (still a slight preoptimization...................................)
+    //
+    // ...don't laugh
+    const startingValue = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].reduce((out, monthIndex) => {
+      const localValue = localStorage.getItem(`db/accounts/${accountName}/${monthIndex}`)
+      if (!localValue) return out
+
+      /** @todo deserialization */
+      return [...out, ...JSON.parse(localValue)]
+    }, [] as Transaction[])
+
+    return [accountName, startingValue]
+  }))
+  let subs: Subscriber<DbShape>[] = []
+
+  const subscribe = (handler: Subscriber<DbShape>) => {
     subs = [...subs, handler]
     handler(value)
     return () => subs = subs.filter(sub => sub !== handler)
@@ -62,23 +77,49 @@ function writableRecord<T>(storageKeys: string[], initialValue: T, localStorageP
    *
    * @note must supply entire new value
    */
-  const set = (newValue: T) => {
+  const set = (newValue: DbShape) => {
     value = newValue
     subs.forEach(sub => sub(value))
 
-    Object.entries(value).map(([suffix, currentValue]) => {
-      localStorage.setItem(
-        `${localStoragePrefix}/${suffix}`,
-        JSON.stringify(currentValue)
-      )
+    Object.entries(value).map(([accountName, transactions]: [string, Transaction[]]) => {
+      // group by month, to perform least amount of writes to localStorage
+      const partitionedTransactions = transactions.reduce((out, txn) => {
+        if (!out.has(txn.month)) out.set(txn.month, [])
+        out.get(txn.month).push(txn)
+
+        return out
+      }, new Map<number, Transaction[]>())
+
+      // update localStorage per month of the year
+      Array.from(partitionedTransactions.entries()).forEach(([month, txns]) => {
+        const keyName = `db/accounts/${accountName}/${month}`
+
+        /** @todo serialize value before saving to localStorage, saving more space */
+        const currentState = JSON.parse(localStorage.getItem(keyName)) || []
+        const shouldUpdate = shouldUpdateTransactionStore(currentState, txns)
+
+        if (!shouldUpdate) return // skip redundant localStorage updates
+
+        const newState = JSON.stringify([ ...currentState, ...txns ])
+
+        localStorage.setItem(keyName, newState)
+      })
     })
   }
 
-  const update = (handler: Updater<T>) => set(handler(value))
+  const update = (handler: Updater<DbShape>) => set(handler(value))
 
-  return { subscribe, set, update }
+  // Add single entry (uses direct object mutation)
+  const add = (txn: Transaction) => {
+    if (!value[txn.account]) value[txn.account] = [txn]
+    if (value[txn.account]) value[txn.account].push(txn)
+
+    subs.forEach(sub => sub(value))
+  }
+
+  return { subscribe, set, update, add }
 }
-export const DB = writableRecord<DbShape>(get(knownAccounts), {})
+export const DB = namespacedDb(get(knownAccounts), {})
 
 // iterate all entries (across keys) & get flat, unsorted list of attribute
 function getDbAttributes(db: DbShape, name: string) {
