@@ -7,8 +7,8 @@
  */
 import { writableStorage } from 'src/lib/writableStorage'
 import type { Transaction } from 'src/lib/types'
-import type { Subscriber, Updater, Writable } from 'svelte/store'
-import { get, writable, derived } from 'svelte/store'
+import type { Subscriber, Updater } from 'svelte/store'
+import { get, derived } from 'svelte/store'
 
 
 type DbShape = Record<string, Transaction[]>

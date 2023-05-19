@@ -33,9 +33,12 @@ export function parseLedger(rawCsv: string): Transaction[] {
 
   return parsed.reduce((out, rawObj) => {
     const rawDate = rawObj.date
+    // on final newlines, date will b empty
+    if (!rawDate || rawDate === '') return out
+
     const txn: Transaction = {
       year: Number(rawDate.slice(0, 4)),
-      month: Number(rawDate.slice(4, 6)),
+      month: Number(rawDate.slice(4, 6)) - 1,
       date: Number(rawDate.slice(6, 8)),
       amount: Number(rawObj.amount),
       rate: Number(rawObj.rate),
@@ -54,8 +57,8 @@ export function parseLedger(rawCsv: string): Transaction[] {
 export function stringifyLedger(txns: Transaction[]): string {
   // sort it just to be nice
   const sortedAndFormatted = txns.sort((txnA, txnB) => {
-    const dateA = new Date([txnA.year, txnA.month, txnA.date].join('-'))
-    const dateB = new Date([txnB.year, txnB.month, txnB.date].join('-'))
+    const dateA = new Date(txnA.year, txnA.month, txnA.date)
+    const dateB = new Date(txnB.year, txnB.month, txnB.date)
 
     return 0 - Number(dateA > dateB)
   }).reduce((out, txn) => {
@@ -63,7 +66,7 @@ export function stringifyLedger(txns: Transaction[]): string {
       if (key === 'date') {
         return [
           txn.year,
-          `${txn.month}`.padStart(2, '0'),
+          `${txn.month + 1}`.padStart(2, '0'),
           `${txn.date}`.padStart(2, '0')
         ].join('')
       }

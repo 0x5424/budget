@@ -1,8 +1,8 @@
 <script lang=ts>
-  import { DB, accounts, creditors, trustedCreditors } from 'src/stores'
+  import { DB, accounts, creditors, knownAccounts, trustedCreditors } from 'src/stores'
   import Paperclip from 'src/components/Paperclip.svelte'
   import Warning from 'src/components/Warning.svelte'
-  import { stringifyLedger } from 'src/lib/csv';
+  import { stringifyLedger, parseLedger } from 'src/lib/csv'
 
   let ledgerCsv = '#'
 
@@ -37,9 +37,24 @@
     }).join(', ')
   })()
 
+  async function onLedgerImport(event) {
+    const file = event.target.files[0]
+    if (!file) return
+
+    const parsed = parseLedger(await file.text())
+    const newDB = parsed.reduce((out, txn) => {
+      if (!out[txn.account]) out[txn.account] = []
+      out[txn.account].push(txn)
+
+      return out
+    }, {})
+    $DB = newDB
+    $knownAccounts = Object.keys(newDB)
+  }
+
   // subscribe to db changes to revoke any outdated csvs, then create new value
   DB.subscribe(db => {
-    const flattenedDB = Object.entries($DB).flatMap(([_, txns]) => txns)
+    const flattenedDB = Object.entries(db).flatMap(([_, txns]) => txns)
     if (!flattenedDB.length) return
 
     if (ledgerCsv !== '' && ledgerCsv !== '#') {
@@ -82,9 +97,16 @@
                     <a href={ledgerCsv} download=ledger.csv class='expand-button rounded-sm px-3 py-2 text-sm font-medium ring-0 ring-inset ring-gray-900/10 shadow-sm hover:ring-1'>
                       Export
                     </a>
-                    <button class='expand-button rounded-sm px-3 py-2 text-sm font-medium ring-0 ring-inset ring-gray-900/10 shadow-sm hover:ring-1'>
+                    <label class='relative expand-button rounded-sm px-3 py-2 text-sm font-medium ring-0 ring-inset ring-gray-900/10 shadow-sm hover:ring-1'>
                       Import
-                    </button>
+                      <input
+                        type='file'
+                        name='ledger-import'
+                        accept='text/csv'
+                        class='absolute opacity-0'
+                        on:change={onLedgerImport}
+                      />
+                    </label>
                   </div>
                 </div>
               </details>
