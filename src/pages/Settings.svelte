@@ -1,7 +1,10 @@
 <script lang=ts>
   import { DB, accounts, creditors, trustedCreditors } from 'src/stores'
   import Paperclip from 'src/components/Paperclip.svelte'
-    import Warning from 'src/components/Warning.svelte';
+  import Warning from 'src/components/Warning.svelte'
+  import { stringifyLedger } from 'src/lib/csv';
+
+  let ledgerCsv = '#'
 
   function toggleCreditor(name: string) {
     const isPresent = !!$creditors.find(val => val === name)
@@ -16,9 +19,9 @@
   $: downloadLedgerText = (() => {
     let totalItems = 0
     let totalAccounts = 0
-    Object.entries($DB).forEach(([_, txns]) => {
+    Object.entries($DB).forEach(([acc, txns]) => {
       totalItems += txns.length
-      totalAccounts += 1
+      totalAccounts += Number($accounts.includes(acc))
     })
 
     if (!totalItems) return 'no items'
@@ -33,6 +36,18 @@
       return `${count} ${textKind}`
     }).join(', ')
   })()
+
+  // subscribe to db changes to revoke any outdated csvs, then create new value
+  DB.subscribe(db => {
+    const flattenedDB = Object.entries($DB).flatMap(([_, txns]) => txns)
+    if (!flattenedDB.length) return
+
+    if (ledgerCsv !== '' && ledgerCsv !== '#') {
+      URL.revokeObjectURL(ledgerCsv)
+    }
+
+    ledgerCsv = URL.createObjectURL(new Blob([stringifyLedger(flattenedDB)], { type: 'text/csv' }))
+  })
 </script>
 
 <article class=container>
@@ -64,9 +79,9 @@
                     <p>This import replaces all transactions and accounts. Other app data is unaffected, so any account-related settings may no longer be applicable after importing.</p>
                   </div>
                   <div class='col-span-3 md:col-span-1 flex md:flex-col justify-around'>
-                    <button class='expand-button rounded-sm px-3 py-2 text-sm font-medium ring-0 ring-inset ring-gray-900/10 shadow-sm hover:ring-1'>
+                    <a href={ledgerCsv} download=ledger.csv class='expand-button rounded-sm px-3 py-2 text-sm font-medium ring-0 ring-inset ring-gray-900/10 shadow-sm hover:ring-1'>
                       Export
-                    </button>
+                    </a>
                     <button class='expand-button rounded-sm px-3 py-2 text-sm font-medium ring-0 ring-inset ring-gray-900/10 shadow-sm hover:ring-1'>
                       Import
                     </button>
@@ -155,6 +170,7 @@
   }
 
   .expand-button {
+    text-align: center;
     transition: all 0.2s linear;
   }
 
