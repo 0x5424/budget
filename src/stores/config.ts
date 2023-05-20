@@ -5,6 +5,8 @@
  */
 
 import { writableStorage } from 'src/lib/writableStorage'
+import { currencies } from './db'
+import { get } from 'svelte/store'
 
 /**
  * If associated accounts can have a balance (eg. a credit card, or a personal loan)
@@ -20,3 +22,8 @@ export const creditors = writableStorage('config/creditors', [] as string[])
  * @example New credit cards with a 0% APR for the first year
  */
 export const trustedCreditors = writableStorage('config/trustedCreditors', [] as string[])
+
+/**
+ * Affects how exchange rates behave... will document more later
+ */
+export const mainCurrency = writableStorage('config/mainCurrency', get(currencies)[0])

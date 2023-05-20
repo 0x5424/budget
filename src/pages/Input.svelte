@@ -1,9 +1,9 @@
 <script lang=ts>
   import type { Transaction } from 'src/lib/types'
-  import { today, accounts, currencies, DB, knownAccounts } from 'src/stores'
+  import { today, accounts, currencies, mainCurrency, DB, knownAccounts } from 'src/stores'
 
   let accountName: string = $knownAccounts[0] || ''
-  let currencyName: string = $currencies[0] || ''
+  let currencyName: string = $mainCurrency || ''
   let rawAmount: void | number
   let rateEquivalent: void | string
   let sign = false
@@ -204,16 +204,6 @@
     </div>
   </section>
 </form>
-
-<ul class=debug>
-  {#each Object.entries($DB).flatMap(([_,v]) => v) as txn}
-    <li>
-      <span>* {txn.month}-{txn.date}</span>
-      <span>{txn.label}</span>
-      <span>{txn.amount}</span>
-    </li>
-  {/each}
-</ul>
 
 <style>
   span[title=Required]::before {

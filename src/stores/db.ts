@@ -134,17 +134,22 @@ function namespacedDb(accountNames: string[], initialValue: {}) {
 }
 export const DB = namespacedDb(get(knownAccounts), {})
 
-// iterate all entries (across keys) & get flat, unsorted list of attribute
-function getDbAttributes(db: DbShape, name: string) {
-  return Object.entries(db).flatMap(([_accountName, transactions]) => transactions.map(txn => txn[name]))
+// iterate all entries & get flat, unsorted list of attributes
+function getDbAttributes(transactions: Transaction[], name: string) {
+  return transactions.map(txn => txn[name])
 }
 
+/** list of all transactions, not guaranteed to be in order */
+export const txns = derived([DB], ([$DB]) => {
+  return Object.entries($DB).flatMap(([_,txn]) => txn)
+})
+
 /** list of actual accounts present, derived from parsed entries */
-export const accounts = derived([DB], ([$DB]) => {
-  return Array.from(new Set(getDbAttributes($DB, 'account')))
+export const accounts = derived([txns], ([$txns]) => {
+  return Array.from(new Set(getDbAttributes($txns, 'account')))
 })
 
 /** list of all known currencies, derived from parsed entries */
-export const currencies = derived([DB], ([$DB]) => {
-  return Array.from(new Set(getDbAttributes($DB, 'currency')))
+export const currencies = derived([txns], ([$txns]) => {
+  return Array.from(new Set(getDbAttributes($txns, 'currency')))
 })

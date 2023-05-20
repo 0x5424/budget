@@ -1,5 +1,6 @@
 <script lang=ts>
-  import { DB, accounts, creditors, knownAccounts, trustedCreditors } from 'src/stores'
+  import { DB, accounts, currencies } from 'src/stores'
+  import { creditors, knownAccounts, trustedCreditors, mainCurrency } from 'src/stores'
   import Paperclip from 'src/components/Paperclip.svelte'
   import Warning from 'src/components/Warning.svelte'
   import { stringifyLedger, parseLedger } from 'src/lib/csv'
@@ -9,6 +10,10 @@
   /** @wtf export link is not focusable on Safari via keyboard navigation */
   let ledgerExportTabindex = -1
   let ledgerImportTabindex = -1
+
+  function toggleMainCurrency(name: string) {
+    $mainCurrency = name
+  }
 
   function toggleCreditor(name: string) {
     const isPresent = !!$creditors.find(val => val === name)
@@ -79,7 +84,7 @@
   })
 </script>
 
-<article class=container>
+<article class='container px-6'>
   <header class='mt-8 pb-10 border-b border-gray-900/10'>
     <div class='grid grid-cols-3 sm:grid-cols-5 gap-x-6 gap-y-8'>
       <div class='col-span-3 md:col-span-1 md:col-start-2'>
@@ -138,6 +143,33 @@
       </div>
     </div>
   </header>
+
+  <section class='mt-8 pb-10 border-b border-gray-900/01'>
+    <div class='grid grid-cols-3 sm:grid-cols-5 gap-x-6 gap-y-8'>
+      <div class='col-span-2 md:col-start-2'>
+        <h3 class='block text-sm font-medium leading-6 mb-1'>Main currency</h3>
+        <p class='text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0'>Select the base currency for the app. This affects dashboard calculations for the current period.</p>
+      </div>
+
+      <div class='col-span-1 md:col-span-2'>
+        <ul>
+          {#each $currencies as currencyName}
+            <li class=my-2>
+              <label>
+                <code class='m-2 account-name'>{currencyName}</code>
+                <input
+                  name={`currency-${currencyName}`}
+                  type=radio
+                  checked={$mainCurrency === currencyName}
+                  on:change={() => toggleMainCurrency(currencyName)}
+                />
+              </label>
+            </li>
+          {/each}
+        </ul>
+      </div>
+    </div>
+  </section>
 
   <section class='mt-8 pb-10 border-b border-gray-900/01'>
     <div class='grid grid-cols-3 sm:grid-cols-5 gap-x-6 gap-y-8'>
