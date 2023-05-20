@@ -1,4 +1,5 @@
 export * from './db'
 export * from './config'
+export * from './finances'
 export * from './routing'
 export * from './today'
