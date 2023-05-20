@@ -114,7 +114,7 @@ function namespacedDb(accountNames: string[], initialValue: {}) {
     if (!value[txn.account]) value[txn.account] = [txn]
     if (value[txn.account]) value[txn.account].push(txn)
 
-    subs.forEach(sub => sub(value))
+    set(value)
   }
 
   /**

@@ -4,10 +4,15 @@
 
   let accountName: string = $knownAccounts[0] || ''
   let currencyName: string = $currencies[0] || ''
-  let rawAmount: void | string
+  let rawAmount: void | number
+  let rateEquivalent: void | string
   let sign = false
   let label = ''
   let date: string = $today.toISOString().slice(0, 10)
+
+  // rate is reactive in the event an "equivalent" is provided
+  $: useRateEquivalent = Boolean(rawAmount && rateEquivalent)
+  $: rawRate = rawAmount && rateEquivalent ? Number(rateEquivalent) / rawAmount : rawRate
 
   // $: {
   //   console.table({
@@ -21,7 +26,17 @@
   // }
 
   function onSubmit() {
-    const multiplyBy = sign ? -1 : 1
+    const multiplyBy = sign ? 1 : -1
+    // todo move to a store or smth
+    const formattedRate = rawRate.split('.').slice(0, 2).filter(s => Boolean(s.length)).map(s => s.replaceAll(/\D/g, '')).join('.')
+    const rateNum = Number(formattedRate)
+
+    /**
+     * "float bad for currency"
+     *
+     * its fine for personal finances of this size.... for now
+     */
+    const rateToPersist = rateNum % 1 === 0 ? rateNum : Number(rateNum.toFixed(6))
 
     const givenDate = new Date(date)
     const newEntry: Transaction = {
@@ -31,16 +46,14 @@
       currency: currencyName,
       account: accountName,
       amount: multiplyBy * Number(rawAmount),
-      rate: 1
+      rate: rateToPersist
     }
 
     if (label !== '') newEntry.label = label
 
     /** update stores */
-    // DB.add(newEntry)
-    let newState = [newEntry]
-    if ($DB[accountName]) newState = [...$DB[accountName], ...newState]
-    $DB = { ...$DB, [accountName]: newState }
+    DB.cleanStorage()
+    DB.add(newEntry)
     if (!$knownAccounts.includes(accountName)) $knownAccounts = [...$knownAccounts, accountName]
 
     /**
@@ -55,11 +68,11 @@
   }
 </script>
 
-<form class='container' on:submit|preventDefault={onSubmit}>
-  <section class='mt-8 pb-10 border-b border-gray-900/10'>
-    <div class='grid grid-cols-3 sm:grid-cols-5 gap-x-6 gap-y-8'>
-      <div class='col-span-2 sm:col-start-2'>
-        <label for=account class='block text-sm font-medium leading-6'>Account Name? <span title=Required/></label>
+<form class='container max-w-xl mx-auto px-6' on:submit|preventDefault={onSubmit}>
+  <section class='py-10 border-b border-gray-900/10'>
+    <div class='grid grid-cols-7 md:grid-cols-10 gap-x-5 gap-y-6'>
+      <div class='col-span-4 md:col-span-2'>
+        <label for=account class='block text-sm font-medium leading-6'>Account <span title=Required/></label>
         <div class=mt-2>
           <input
             type=text
@@ -79,7 +92,7 @@
           {/if}
         </div>
       </div>
-      <div>
+      <div class='col-span-3 md:col-span-2'>
         <label for=currency class='block text-sm font-medium leading-6'>Currency <span title=Required/></label>
         <div class=mt-2>
           <input
@@ -101,7 +114,7 @@
           {/if}
         </div>
       </div>
-      <div class=sm:col-start-2>
+      <div class='col-span-2 md:col-span-2'>
         <label class='flex flex-col text-sm font-medium leading-6'>
           Income?
           <input id=sign name=sign type=checkbox class='mx-3 my-2 rounded-sm' bind:checked={sign}>
@@ -110,7 +123,7 @@
           </p>
         </label>
       </div>
-      <div class=col-span-2>
+      <div class='col-span-5 md:col-span-4'>
         <label for=rawAmount class='block text-sm font-medium leading-6'>Amount <span title=Required/></label>
         <div class=mt-2>
           <input
@@ -126,7 +139,36 @@
           />
         </div>
       </div>
-      <div class='col-span-3 sm:col-start-2'>
+      <div class='col-span-3 md:col-span-3'>
+        <label for=rawDate class='block text-sm font-medium leading-6'>Exchange Rate <span title=Required/></label>
+        <div class=mt-2>
+          <input
+            type=text
+            id=rawRate
+            name=rawRate
+            required
+            readonly={useRateEquivalent}
+            inputmode=decimal
+            class='block w-full rounded-sm sm:text-sm'
+            class:bg-gray-100={useRateEquivalent}
+            bind:value={rawRate}
+          />
+        </div>
+      </div>
+      <div class='col-span-4 md:col-span-3'>
+        <label for=rateEquivalent class='block truncate text-sm font-medium leading-6'>Or, JPY equivalent (todo: suport more)</label>
+        <div class=mt-2>
+          <input
+            type=text
+            id=rateEquivalent
+            name=rateEquivalent
+            inputmode=decimal
+            class='block w-full rounded-sm sm:text-sm'
+            bind:value={rateEquivalent}
+          />
+        </div>
+      </div>
+      <div class='col-span-7 md:col-span-4'>
         <label for=label class='block text-sm font-medium leading-6'>Label?</label>
         <div class=mt-2>
           <input
@@ -134,15 +176,15 @@
             id=label
             name=label
             class='block w-full rounded-sm sm:text-sm'
-            placeholder='Arbitrary label for personal reference'
+            placeholder='Label for personal reference'
             bind:value={label}
           />
         </div>
       </div>
     </div>
   </section>
-  <section class='mt-8 grid grid-cols-3 sm:grid-cols-5'>
-    <div class='col-span-2 sm:col-start-2 flex justify-end'>
+  <section class='py-8 grid grid-cols-4'>
+    <div class='col-span-3 flex justify-end'>
       <input
         type=date
         id=entryDate
@@ -151,7 +193,7 @@
         class='rounded-sm sm:text-sm'
       />
     </div>
-    <div class='col-start-3 sm:col-start-4 flex justify-end'>
+    <div class='flex justify-end'>
       <button
         type=submit
         disabled={currencyName === '' || !rawAmount || accountName === ''}
@@ -162,6 +204,16 @@
     </div>
   </section>
 </form>
+
+<ul class=debug>
+  {#each Object.entries($DB).flatMap(([_,v]) => v) as txn}
+    <li>
+      <span>* {txn.month}-{txn.date}</span>
+      <span>{txn.label}</span>
+      <span>{txn.amount}</span>
+    </li>
+  {/each}
+</ul>
 
 <style>
   span[title=Required]::before {
