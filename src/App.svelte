@@ -4,13 +4,14 @@
   import Header from './Header.svelte'
   import Input from 'src/pages/Input.svelte'
   import Settings from 'src/pages/Settings.svelte'
+  import Dashboard from 'src/pages/Dashboard.svelte'
 </script>
 
 <main>
   <Header />
 
   {#if $currentPage === 'DASHBOARD'}
-    dashboard
+    <Dashboard />
   {:else if $currentPage === 'INPUT'}
     <Input />
   {:else if $currentPage === 'SETTINGS'}
