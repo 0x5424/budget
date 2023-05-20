@@ -37,8 +37,8 @@
     }).join(', ')
   })()
 
-  async function onLedgerImport(event) {
-    const file = event.target.files[0]
+  async function onLedgerImport({ currentTarget }: { currentTarget: EventTarget & HTMLInputElement }) {
+    const file = currentTarget.files[0]
     if (!file) return
 
     const parsed = parseLedger(await file.text())
@@ -48,6 +48,8 @@
 
       return out
     }, {})
+
+    DB.cleanStorage()
     $DB = newDB
     $knownAccounts = Object.keys(newDB)
   }

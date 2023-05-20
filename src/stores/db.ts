@@ -117,7 +117,20 @@ function namespacedDb(accountNames: string[], initialValue: {}) {
     subs.forEach(sub => sub(value))
   }
 
-  return { subscribe, set, update, add }
+  /**
+   * Cleanup localStorage, removing all currently known accounts.
+   *
+   * @note After cleaning storage, if `set()` isn't called again db state will be lost upon reload
+   */
+  const cleanStorage = () => {
+    Object.keys(value).forEach(accountName => {
+      [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].forEach((monthIndex) => {
+        localStorage.removeItem(`db/accounts/${accountName}/${monthIndex}`)
+      })
+    })
+  }
+
+  return { subscribe, set, update, add, cleanStorage }
 }
 export const DB = namespacedDb(get(knownAccounts), {})
 
