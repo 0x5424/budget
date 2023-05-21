@@ -4,6 +4,8 @@
  * reason for labeling as a config: the DB shape has no column for creditor status
  */
 
+import type { OmitIncomeFilter } from 'src/lib/types'
+
 import { writableStorage } from 'src/lib/writableStorage'
 import { currencies } from './db'
 import { get } from 'svelte/store'
@@ -27,3 +29,5 @@ export const trustedCreditors = writableStorage('config/trustedCreditors', [] as
  * Affects how exchange rates behave... will document more later
  */
 export const mainCurrency = writableStorage('config/mainCurrency', get(currencies)[0])
+
+export const omitIncomeFilters = writableStorage('config/omitIncomeFilters', [] as OmitIncomeFilter[])

@@ -1,8 +1,9 @@
 <script lang=ts>
   import { DB, accounts, currencies } from 'src/stores'
-  import { creditors, knownAccounts, trustedCreditors, mainCurrency } from 'src/stores'
+  import { creditors, knownAccounts, trustedCreditors, mainCurrency, omitIncomeFilters } from 'src/stores'
   import Paperclip from 'src/components/Paperclip.svelte'
   import Warning from 'src/components/Warning.svelte'
+  import IncomeFilterListItem from 'src/components/IncomeFilterListItem.svelte'
   import { stringifyLedger, parseLedger } from 'src/lib/csv'
 
   let ledgerCsv = '#'
@@ -84,14 +85,14 @@
   })
 </script>
 
-<article class='container px-6'>
-  <header class='mt-8 pb-10 border-b border-gray-900/10'>
-    <div class='grid grid-cols-3 sm:grid-cols-5 gap-x-6 gap-y-8'>
-      <div class='col-span-3 md:col-span-1 md:col-start-2'>
+<article class='container max-w-3xl mx-auto px-6'>
+  <header class='py-10 border-b border-gray-900/10'>
+    <div class='grid grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-8'>
+      <div class='col-span-3 md:col-span-2'>
         <h2 class='text-base font-semibold leading-7 text-gray-900'>Settings</h2>
         <p class='mt-1 max-w-2xl text-sm leading-6 text-gray-500'>App-wide settings. Some settings will affect expense calculation.</p>
       </div>
-      <div class='col-span-3 md:col-span-2'>
+      <div class='col-span-3'>
         <div>
           <h3 class='block text-sm font-medium leading-6 mb-1'>Import/Export</h3>
           <ul class='divide-y divide-gray-100 rounded-md border border-gray-200'>
@@ -144,11 +145,11 @@
     </div>
   </header>
 
-  <section class='mt-8 pb-10 border-b border-gray-900/01'>
-    <div class='grid grid-cols-3 sm:grid-cols-5 gap-x-6 gap-y-8'>
-      <div class='col-span-2 md:col-start-2'>
+  <section class='py-6 border-b border-gray-900/01'>
+    <div class='grid grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-8'>
+      <div class='col-span-2 md:col-span-3'>
         <h3 class='block text-sm font-medium leading-6 mb-1'>Main currency</h3>
-        <p class='text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0'>Select the base currency for the app. This affects dashboard calculations for the current period.</p>
+        <p class='text-sm leading-6 text-gray-700 md:col-span-2 md:mt-0'>Select the base currency for the app. This affects dashboard calculations for the current period.</p>
       </div>
 
       <div class='col-span-1 md:col-span-2'>
@@ -171,11 +172,11 @@
     </div>
   </section>
 
-  <section class='mt-8 pb-10 border-b border-gray-900/01'>
-    <div class='grid grid-cols-3 sm:grid-cols-5 gap-x-6 gap-y-8'>
-      <div class='col-span-2 md:col-start-2'>
+  <section class='py-6 border-b border-gray-900/01'>
+    <div class='grid grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-8'>
+      <div class='col-span-2 md:col-span-3'>
         <h3 class='block text-sm font-medium leading-6 mb-1'>Creditors</h3>
-        <p class='text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0'>Specify which accounts transact with a monthly balance. Selecting an account here causes their expenses to be deducted from the <em>next</em> month's balance, as a repayment of debt.</p>
+        <p class='text-sm leading-6 text-gray-700 md:col-span-2 md:mt-0'>Specify which accounts transact with a monthly balance. Selecting an account here causes their expenses to be deducted from the <em>next</em> month's balance, as a repayment of debt.</p>
       </div>
 
       <div class='col-span-1 md:col-span-2'>
@@ -199,11 +200,11 @@
   </section>
 
   {#if $creditors.length}
-    <section class='mt-8 pb-10 border-b border-gray-900/01'>
-      <div class='grid grid-cols-3 sm:grid-cols-5 gap-x-6 gap-y-8'>
-        <div class='col-span-2 md:col-start-2'>
+    <section class='py-6 border-b border-gray-900/01'>
+      <div class='grid grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-8'>
+        <div class='col-span-2 md:col-span-3'>
           <h3 class='block text-sm font-medium leading-6 mb-1'>High-trust Creditors</h3>
-          <p class='text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0'>A subset of creditors, these accounts charge 0 interest for their loans. Selecting an account here prevents an equivalent repayment expense from being generated in next month's projected balance.</p>
+          <p class='text-sm leading-6 text-gray-700 md:col-span-2 md:mt-0'>A subset of creditors, these accounts charge 0 interest for their loans. Selecting an account here prevents an equivalent repayment expense from being generated in next month's projected balance.</p>
         </div>
 
         <div class='col-span-1 md:col-span-2'>
@@ -227,6 +228,26 @@
     </section>
   {/if}
 
+  {#if $omitIncomeFilters.length}
+    <section class='py-6 border-b border-gray-900/01'>
+      <div class='grid grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-8'>
+        <div class='col-span-3 md:col-span-5'>
+          <h3 class='block text-sm font-medium leading-6 mb-1'>Income filters</h3>
+          <p class='text-sm leading-6 text-gray-700 md:col-span-2 md:mt-0'>During monthly calculations of <em>income</em>, any transations matching these conditions will be omitted. <strong>
+          This doesn't affect expense calculation.</strong> currently doesn't work lol</p>
+        </div>
+
+        <div class='col-span-3 md:col-span-5'>
+          <ul>
+            <li>todo: new Item</li>
+            {#each $omitIncomeFilters as incomeFilter}
+              <IncomeFilterListItem filterItem={incomeFilter} />
+            {/each}
+          </ul>
+        </div>
+      </div>
+    </section>
+  {/if}
 </article>
 
 <style>
