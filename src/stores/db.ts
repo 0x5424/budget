@@ -139,9 +139,14 @@ function getDbAttributes(transactions: Transaction[], name: string) {
   return transactions.map(txn => txn[name])
 }
 
-/** list of all transactions, not guaranteed to be in order */
+/** list of all transactions, in order */
 export const txns = derived([DB], ([$DB]) => {
-  return Object.entries($DB).flatMap(([_,txn]) => txn)
+  return Object.entries($DB).flatMap(([_,txn]) => txn).sort((a, b) => {
+    const dateA = new Date(a.year, a.month, a.date)
+    const dateB = new Date(b.year, b.month, b.date)
+
+    return 0 - Number(dateA < dateB)
+  })
 })
 
 /** list of actual accounts present, derived from parsed entries */

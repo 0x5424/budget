@@ -1,9 +1,18 @@
 <script lang=ts>
-  import { today } from 'src/stores'
-  import { lastIncome, nextIncome } from 'src/stores'
+  import type { Transaction } from 'src/lib/types'
+  import { today, currentPeriodIncome } from 'src/stores'
+  import { lastIncome, nextIncome, previousTransactions } from 'src/stores'
+
+  function sum(txns: Transaction[]) {
+    return txns.reduce((out, txn) => out += txn.rate * txn.amount, 0)
+  }
+
+  function round(txns: Transaction[]) {
+    return Math.round(sum(txns))
+  }
 
   // show a single date or a range
-  $: currentRangeTitle = !$lastIncome ? 'No income info yet' : [
+  $: currentPeriodTitle = $lastIncome && [
     'Income for',
     `${$lastIncome.month + 1}/${$lastIncome.date}`,
     $nextIncome && `to ${$nextIncome.month + 1}/${$nextIncome.date}`
@@ -13,12 +22,19 @@
 <article class='container max-w-md mx-auto px-6'>
   <fieldset class='border px-6 py-3'>
     <legend>Finances, {$today.toDateString()}</legend>
-    <dl class='grid grid-cols-2'>
-      <div class='col-span-2'>
-        <dt>{currentRangeTitle}</dt>
-        <dd>Bar</dd>
-      </div>
-    </dl>
+    {#if $lastIncome}
+      <dl class='grid grid-cols-2'>
+        <div class='col-span-2'>
+          <dt>Ending balance on {`${$lastIncome.month + 1}/${$lastIncome.date - 1}`}</dt>
+          <dd>{round($previousTransactions)}</dd>
+        </div>
+        <div class='col-span-2'>
+          <dt>{currentPeriodTitle}</dt>
+          <!-- @todo, fix: this calc is wrong when the entry is a transfer from one account to another -->
+          <dd>{round($currentPeriodIncome)}</dd>
+        </div>
+      </dl>
+    {/if}
   </fieldset>
   <!--
   <fieldset>
