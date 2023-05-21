@@ -1,73 +1,29 @@
 // calcs for dashboard
 
 import type { Transaction } from 'src/lib/types'
+import { findLargestIncome } from 'src/lib/filters'
 import { today } from './today'
 import { txns } from './db'
 import { creditors } from './config'
 import { derived } from 'svelte/store'
 
  /** assumption: most recent large income within last 31 days */
-export const lastIncome = derived([today, txns] , ([$today, $txns]) => {
-   return $txns.reduce((prevTxn, txn) => {
-    if (txn.amount < 0) return prevTxn
-    const txnDate = new Date(txn.year, txn.month, txn.date)
-
-    // 1. skip txns in future
-    if (txnDate > $today) return prevTxn // 1. skip txns in future
-
-    const thirtyOneDaysAgo = (new Date($today.getTime() - 31 * 24 * 60 * 60 * 1000))
-    if (txnDate < thirtyOneDaysAgo) return prevTxn // 2. skip old txns
-
-    // 3. first iteration will be blank
-    if (!prevTxn) return txn
-
-    // 4. (unlikely) Keep older txn if amounts match exactly
-    if (prevTxn.amount === txn.amount) {
-      const prevDate = new Date(prevTxn.year, prevTxn.month, prevTxn.date)
-
-      return prevDate > txnDate ? txn : prevTxn
-    }
-
-    // 4. Finally, return current txn only if it's higher amount than previous
-    const prevAmt = prevTxn.rate * prevTxn.amount
-    const currAmt = txn.rate * txn.amount
-
-    return prevAmt > currAmt ? prevTxn : txn
-  }, null)
+export const lastIncome = derived([today, txns], ([$today, $txns]) => {
+  const thirtyOneDaysAgo = (new Date($today.getTime() - 31 * 24 * 60 * 60 * 1000))
+  return findLargestIncome({ before: $today, after: thirtyOneDaysAgo, transactions: $txns })
 })
+export const lastIncomeDate = derived([lastIncome], ([$lastIncome]) => $lastIncome && new Date($lastIncome.year, $lastIncome.month, $lastIncome.date))
 
 /** assumption: next large income within 1 month from previous income */
-export const nextIncome = derived([lastIncome, txns] , ([$lastIncome, $txns]) => {
-  return $txns.reduce((prevTxn, txn) => {
-    if (txn.amount < 0) return prevTxn
+export const nextIncome = derived([lastIncomeDate, txns] , ([$lastIncomeDate, $txns]) => {
+  // edge case: no txns
+  if (!$lastIncomeDate) return
 
-    const lastIncomeDate = new Date($lastIncome.year, $lastIncome.month, $lastIncome.date)
-    const txnDate = new Date(txn.year, txn.month, txn.date)
-
-    if (txnDate <= lastIncomeDate) return prevTxn // 1. skip txns before (& including) last income
-
-    const oneMonthLater = new Date($lastIncome.year, $lastIncome.month + 1, $lastIncome.date)
-    if (txnDate > oneMonthLater) return prevTxn // 2. skip txns more than amonth after last income
-
-    // 3. first iteration will be blank
-    if (!prevTxn) return txn
-
-    // 4. (unlikely) Keep newer txn if amounts match exactly
-    if (prevTxn.amount === txn.amount) {
-      const prevDate = new Date(prevTxn.year, prevTxn.month, prevTxn.date)
-
-      return prevDate < txnDate ? txn : prevTxn
-    }
-
-    // 4. Finally, return current txn only if it's higher amount than previous
-    const prevAmt = prevTxn.rate * prevTxn.amount
-    const currAmt = txn.rate * txn.amount
-
-    return prevAmt > currAmt ? prevTxn : txn
-  }, null)
+  // make sure to exclude income day itself, or it gets returned
+  const cutoff = new Date($lastIncomeDate.getTime() + 24 * 60 * 60 * 1000)
+  const oneMonthLater = new Date(cutoff.getFullYear(), cutoff.getMonth() + 1, cutoff.getDate())
+  return findLargestIncome({ before: oneMonthLater, after: cutoff, transactions: $txns })
 })
-
-export const lastIncomeDate = derived([lastIncome], ([$lastIncome]) => $lastIncome && new Date($lastIncome.year, $lastIncome.month, $lastIncome.date))
 export const nextIncomeDate = derived([nextIncome], ([$nextIncome]) => $nextIncome && new Date($nextIncome.year, $nextIncome.month, $nextIncome.date))
 
 /** definition: all transactions before most recent income */
