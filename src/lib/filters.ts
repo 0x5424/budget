@@ -3,8 +3,8 @@ import type { Transaction } from './types'
 export function byDate({ transactions, before, after }: { transactions: Transaction[], before?: Date, after?: Date }) {
   return transactions.reduce((out: Transaction[], txn) => {
     const txnDate = new Date(txn.year, txn.month, txn.date)
-    if (before && txnDate > before) return out // before = upper limit
-    if (after && txnDate < after) return out // after = lower limit
+    if (before && txnDate >= before) return out // before = upper limit
+    if (after && txnDate <= after) return out // after = lower limit
 
     out.push(txn)
     return out
