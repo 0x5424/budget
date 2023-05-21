@@ -152,3 +152,23 @@ export const currentPeriodDebts = derived([currentPeriodTransactions, creditors]
     return out
   }, [] as Transaction[])
 })
+
+/** all txns repaying debt */
+export const currentPeriodRepayments = derived([currentPeriodTransactions, creditors], ([$currentPeriodTransactions, $creditors]) => {
+  return $currentPeriodTransactions.reduce((out, txn) => {
+    // repayments should all be positive
+    if (txn.amount < 0) return out
+    if ($creditors.includes(txn.account)) out.push(txn)
+
+    return out
+  }, [] as Transaction[])
+})
+
+function sum(txns: Transaction[]) {
+  return txns.reduce((out, txn) => out += txn.rate * txn.amount, 0)
+}
+
+/** sum the "effective" transactions for the current period */
+export const disposableIncome = derived([currentPeriodIncome, currentPeriodRepayments, currentPeriodExpenses], ([$currentPeriodIncome, $currentPeriodRepayments, $currentPeriodExpenses]) => {
+  return sum($currentPeriodIncome) - sum($currentPeriodRepayments) + sum($currentPeriodExpenses)
+})

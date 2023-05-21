@@ -173,13 +173,13 @@
   </section>
 
   <section class='py-6 border-b border-gray-900/01'>
-    <div class='grid grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-8'>
+    <div class='grid grid-cols-4 md:grid-cols-5 gap-x-2 gap-y-8'>
       <div class='col-span-2 md:col-span-3'>
         <h3 class='block text-sm font-medium leading-6 mb-1'>Creditors</h3>
         <p class='text-sm leading-6 text-gray-700 md:col-span-2 md:mt-0'>Specify which accounts transact with a monthly balance. Selecting an account here causes their expenses to be deducted from the <em>next</em> month's balance, as a repayment of debt.</p>
       </div>
 
-      <div class='col-span-1 md:col-span-2'>
+      <div class='col-span-2 md:col-span-2'>
         <ul>
           {#each $accounts as accountName}
             <li class=my-2>
@@ -201,13 +201,13 @@
 
   {#if $creditors.length}
     <section class='py-6 border-b border-gray-900/01'>
-      <div class='grid grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-8'>
+      <div class='grid grid-cols-4 md:grid-cols-5 gap-x-6 gap-y-8'>
         <div class='col-span-2 md:col-span-3'>
           <h3 class='block text-sm font-medium leading-6 mb-1'>High-trust Creditors</h3>
           <p class='text-sm leading-6 text-gray-700 md:col-span-2 md:mt-0'>A subset of creditors, these accounts charge 0 interest for their loans. Selecting an account here prevents an equivalent repayment expense from being generated in next month's projected balance.</p>
         </div>
 
-        <div class='col-span-1 md:col-span-2'>
+        <div class='col-span-2 md:col-span-2'>
           <ul>
             {#each $creditors as creditorName}
               <li class=my-2>
@@ -252,6 +252,7 @@
 
 <style>
   .account-name {
+    font-size: 0.875rem;
     padding: 0.5em;
     background-color: #eeee;
   }
