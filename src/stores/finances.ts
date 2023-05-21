@@ -1,7 +1,7 @@
 // calcs for dashboard
 
 import type { Transaction } from 'src/lib/types'
-import { byDate, findLargestIncome } from 'src/lib/filters'
+import { byDate, findLargestIncome, greaterThan, lessThan, omitValues, keepValues } from 'src/lib/filters'
 import { today } from './today'
 import { txns } from './db'
 import { creditors } from './config'
@@ -52,18 +52,11 @@ export const currentPeriodTransactions = derived([lastIncomeDate, today, nextInc
  * @note omits all payments with a `source` key
  */
 export const currentPeriodIncome = derived([currentPeriodTransactions, creditors], ([$currentPeriodTransactions, $creditors]) => {
-  return $currentPeriodTransactions.reduce((out, txn) => {
-    if (txn.amount < 0) return out
-
-    // app logic: omit creditor repayments
-    if ($creditors.includes(txn.account)) return out
-
-    // app logic: omit transfers
-    if (txn.source) return out
-
-    out.push(txn)
-    return out
-  }, [] as Transaction[])
+  return omitValues({
+    transactions: greaterThan(0, $currentPeriodTransactions).filter(({ source }) => !source),
+    key: 'account',
+    omit: $creditors
+  })
 })
 
 /**
@@ -72,38 +65,29 @@ export const currentPeriodIncome = derived([currentPeriodTransactions, creditors
  * @note expenses made on credit are deferred to next month
  */
 export const currentPeriodExpenses = derived([currentPeriodTransactions, creditors], ([$currentPeriodTransactions, $creditors]) => {
-  return $currentPeriodTransactions.reduce((out, txn) => {
-    if (txn.amount > 0) return out
-
-    // app logic: omit charges made on credit
-    if ($creditors.includes(txn.account)) return out
-
-    out.push(txn)
-    return out
-  }, [] as Transaction[])
+  return omitValues({
+    transactions: lessThan(0, $currentPeriodTransactions),
+    key: 'account',
+    omit: $creditors
+  })
 })
 
 /** all expenses made on credit for current period (maybe there's a better name) */
 export const currentPeriodDebts = derived([currentPeriodTransactions, creditors], ([$currentPeriodTransactions, $creditors]) => {
-  return $currentPeriodTransactions.reduce((out, txn) => {
-    if (txn.amount > 0) return out
-
-    // app logic: include charges made on credit
-    if ($creditors.includes(txn.account)) out.push(txn)
-
-    return out
-  }, [] as Transaction[])
+  return keepValues({
+    transactions: lessThan(0, $currentPeriodTransactions),
+    key: 'account',
+    keep: $creditors
+  })
 })
 
 /** all txns repaying debt */
 export const currentPeriodRepayments = derived([currentPeriodTransactions, creditors], ([$currentPeriodTransactions, $creditors]) => {
-  return $currentPeriodTransactions.reduce((out, txn) => {
-    // repayments should all be positive
-    if (txn.amount < 0) return out
-    if ($creditors.includes(txn.account)) out.push(txn)
-
-    return out
-  }, [] as Transaction[])
+  return keepValues({
+    transactions: greaterThan(0, $currentPeriodTransactions),
+    key: 'account',
+    keep: $creditors
+  })
 })
 
 function sum(txns: Transaction[]) {

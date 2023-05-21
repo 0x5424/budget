@@ -11,9 +11,36 @@ export function byDate({ transactions, before, after }: { transactions: Transact
   }, [])
 }
 
-export function greaterThan(transactions: Transaction[], amount: number) {
+export function greaterThan(amount: number, transactions: Transaction[]) {
   return transactions.reduce((out: Transaction[], txn) => {
     if (txn.amount > amount) out.push(txn)
+
+    return out
+  }, [])
+}
+
+export function lessThan(amount: number, transactions: Transaction[]) {
+  return transactions.reduce((out: Transaction[], txn) => {
+    if (txn.amount < amount) out.push(txn)
+
+    return out
+  }, [])
+}
+
+/** omit any txns that have values in the discriminator array */
+export function omitValues({ transactions, key, omit }: { transactions: Transaction[], key: string, omit: any[] }) {
+  return transactions.reduce((out: Transaction[], txn) => {
+    if (txn[key] && omit.includes(txn[key])) return out
+
+    out.push(txn)
+    return out
+  }, [])
+}
+
+/** keep any txns that have values in the discriminator array */
+export function keepValues({ transactions, key, keep }: { transactions: Transaction[], key: string, keep: any[] }) {
+  return transactions.reduce((out: Transaction[], txn) => {
+    if (txn[key] && keep.includes(txn[key])) out.push(txn)
 
     return out
   }, [])
@@ -23,7 +50,7 @@ export function greaterThan(transactions: Transaction[], amount: number) {
  * given list of transactions, get biggest net inflow (positive)
  */
 export function findLargestIncome({ before, after, transactions }: { before?: Date, after?: Date, transactions: Transaction[] }) {
-   return greaterThan(byDate({ transactions, before, after }), 0).reduce((prevTxn, txn) => {
+   return greaterThan(0, byDate({ transactions, before, after })).reduce((prevTxn, txn) => {
     // first iteration will be blank
     if (!prevTxn) return txn
 
