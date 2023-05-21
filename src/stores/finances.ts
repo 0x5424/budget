@@ -129,7 +129,7 @@ export const currentPeriodIncome = derived([currentPeriodTransactions, creditors
     if ($creditors.includes(txn.account)) return out
 
     // app logic: omit transfers
-    // (todo)
+    if (txn.source) return out
 
     out.push(txn)
     return out

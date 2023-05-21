@@ -26,6 +26,7 @@ export type Transaction = {
   account: string
   amount: number
   rate: Rate
+  source?: string // name of any account that provided these funds. name should present in ledger somewhere
   label?: string
 }
 

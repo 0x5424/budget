@@ -1,5 +1,5 @@
 /** ledger is the main import, all txns  */
-const LEDGER_HEADERS = ['date', 'currency', 'amount', 'rate', 'account', 'label'] as const
+const LEDGER_HEADERS = ['date', 'currency', 'amount', 'rate', 'account', 'source', 'label'] as const
 
 import type { Transaction } from './types'
 
@@ -46,8 +46,9 @@ export function parseLedger(rawCsv: string): Transaction[] {
       account: rawObj.account
     }
 
-    const { label } = rawObj
+    const { label, source } = rawObj
     if (label && label !== '') txn['label'] = label
+    if (source && source !== '') txn['source'] = source
 
     out.push(txn)
     return out
