@@ -8,7 +8,7 @@ import type { OmitIncomeFilter } from 'src/lib/types'
 
 import { writableStorage } from 'src/lib/writableStorage'
 import { currencies } from './db'
-import { get } from 'svelte/store'
+import { get, derived } from 'svelte/store'
 
 /**
  * If associated accounts can have a balance (eg. a credit card, or a personal loan)
@@ -24,6 +24,13 @@ export const creditors = writableStorage('config/creditors', [] as string[])
  * @example New credit cards with a 0% APR for the first year
  */
 export const trustedCreditors = writableStorage('config/trustedCreditors', [] as string[])
+
+/**
+ * creditors charging interest; inverse logic of trustedCreditors
+ */
+export const interestCreditors = derived([creditors, trustedCreditors], ([$creditors, $trustedCreditors]) => {
+  return $creditors.filter(name => !$trustedCreditors.includes(name))
+})
 
 /**
  * Affects how exchange rates behave... will document more later

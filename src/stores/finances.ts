@@ -107,19 +107,7 @@ export const currentPeriodTransactions = derived([lastIncomeDate, today, nextInc
 /**
  * definition: all incoming cash for the current period
  *
- * @todo this calc needs to be fixed when there is a "transfer" of money from 1 account to another
- * @example the following ledger would be wrong:
- * 4-20: +1000 to account `cash`
- * 4-21:  -500 from account `cash` (sending to `savings`)
- * 4-21:  +500 to account `savings`
- *
- * balance mistakenly reported as 1500
- *
- * @workaround if a destination account is a `creditor`, we know to omit a repayment.
- * @example assuming account `card` is a creditor, this would correctly report 1000
- * 4-20: +1000 to account `cash`
- * 4-21:  -500 from account `cash` (repaying creditor `card`)
- * 4-21:  +500 to account `card`
+ * @note omits all payments with a `source` key
  */
 export const currentPeriodIncome = derived([currentPeriodTransactions, creditors], ([$currentPeriodTransactions, $creditors]) => {
   return $currentPeriodTransactions.reduce((out, txn) => {
@@ -132,6 +120,35 @@ export const currentPeriodIncome = derived([currentPeriodTransactions, creditors
     if (txn.source) return out
 
     out.push(txn)
+    return out
+  }, [] as Transaction[])
+})
+
+/**
+ * all immediate "cash" outflows
+ *
+ * @note expenses made on credit are deferred to next month
+ */
+export const currentPeriodExpenses = derived([currentPeriodTransactions, creditors], ([$currentPeriodTransactions, $creditors]) => {
+  return $currentPeriodTransactions.reduce((out, txn) => {
+    if (txn.amount > 0) return out
+
+    // app logic: omit charges made on credit
+    if ($creditors.includes(txn.account)) return out
+
+    out.push(txn)
+    return out
+  }, [] as Transaction[])
+})
+
+/** all expenses made on credit for current period (maybe there's a better name) */
+export const currentPeriodDebts = derived([currentPeriodTransactions, creditors], ([$currentPeriodTransactions, $creditors]) => {
+  return $currentPeriodTransactions.reduce((out, txn) => {
+    if (txn.amount > 0) return out
+
+    // app logic: include charges made on credit
+    if ($creditors.includes(txn.account)) out.push(txn)
+
     return out
   }, [] as Transaction[])
 })
