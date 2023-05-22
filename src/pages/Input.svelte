@@ -55,6 +55,8 @@
     DB.cleanStorage()
     DB.add(newEntry)
     if (!$knownAccounts.includes(accountName)) $knownAccounts = [...$knownAccounts, accountName]
+    if ($mainAccount === '') $mainAccount = accountName
+    if ($mainCurrency === '') $mainCurrency = currencyName
 
     /**
      * then reset relevant form values

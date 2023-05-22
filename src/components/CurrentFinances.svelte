@@ -49,7 +49,7 @@
 
   $: startDate = $lastIncomeDate
   $: endDate = new Date()
-  $: dayDiff = (endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)
+  $: dayDiff = !startDate ? 1 : (endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)
 
   $: expensesOnCredit = sum($currentPeriodDebts)
   $: expensesAuxillary = sum($currentPeriodExpenses)

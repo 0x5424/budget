@@ -1,23 +1,26 @@
 <script lang=ts>
-  import { txns, mainCurrency, lastIncome, nextIncome } from 'src/stores'
+  import type { Transaction } from 'src/lib/types'
+  import { txns, mainCurrency, lastIncome, nextIncome, rangeStart, rangeEnd } from 'src/stores'
   import CurrentFinances from 'src/components/CurrentFinances.svelte'
 
-  function sameDate({ year: yA, month: mA, date: dA }: Transaction, b: Transaction | void) {
-    if (!b) return false
-    const { year, month, date } = b
-
-    return (yA === year) && (mA === month) && (dA === date)
+  function sameDate({ year: txnYear, month: txnMonth, date: txnDate }: Transaction, date: Date | void) {
+    if (!date) return false
+    return (new Date(txnYear, txnMonth, txnDate)).getTime() === date.getTime()
   }
 
-  function withinRange(txn, starty, endy) {
-    const endDate = new Date(endy.year, endy.month, endy.date)
-    const startDate = new Date(starty.year, starty.month, starty.date)
-    const theDate = new Date(txn.year, txn.month, txn.date)
+  function withinRange(txn: Transaction, startDate: Date, endDate: void | Date) {
+    const txnDate = new Date(txn.year, txn.month, txn.date)
 
-    return (theDate >= startDate) && (theDate < endDate)
+    if (!endDate) return startDate === txnDate
+
+    return (txnDate >= startDate) && (txnDate < endDate)
   }
 
-  $: sortedTxns = [...$txns].reverse().filter((txn) => (new Date($nextIncome.year, $nextIncome.month + 1, $nextIncome.date)) >= (new Date(txn.year, txn.month, txn.date)))
+  $: sortedTxns = [...$txns].reverse().filter((txn) => {
+    if (!$nextIncome) return true
+
+    return (new Date($nextIncome.year, $nextIncome.month + 1, $nextIncome.date)) >= (new Date(txn.year, txn.month, txn.date))
+  })
 </script>
 
 <div>
@@ -29,13 +32,13 @@
       <li
         class='grid grid-cols-8'
         class:text-green-600={!txn.source && txn.amount > 0}
-        class:bg-neutral-100={withinRange(txn, $lastIncome, $nextIncome)}
-        class:border-l={sameDate(txn, $nextIncome)}
-        class:bg-red-50={sameDate(txn, $nextIncome)}
-        class:next-income={sameDate(txn, $nextIncome)}
-        class:border-r={sameDate(txn, $lastIncome)}
-        class:bg-green-50={sameDate(txn, $lastIncome)}
-        class:last-income={sameDate(txn, $lastIncome)}
+        class:bg-red-50={sameDate(txn, $rangeEnd)}
+        class:border-red-600={sameDate(txn, $rangeEnd)}
+        class:next-income={sameDate(txn, $rangeEnd)}
+        class:border-r={sameDate(txn, $rangeStart)}
+        class:bg-green-50={sameDate(txn, $rangeStart)}
+        class:bg-neutral-100={withinRange(txn, $rangeStart, $rangeEnd) && !sameDate(txn, $rangeStart)}
+        class:last-income={sameDate(txn, $rangeStart)}
       >
         <button
           on:click={() => $nextIncome = txn}
@@ -65,14 +68,19 @@
 
 <style>
   .next-income {
-    --tw-border-opacity: 1;
-    border-color: rgb(239 68 68 / var(--tw-border-opacity));
     border-bottom-width: 1px;
   }
 
   /* is followed by another entry from the same date */
   .next-income:has(+ .next-income) {
     border-bottom-width: 0px;
+  }
+
+  /* add a border to the left of the next income item */
+  .next-income + li:not(.next-income) {
+    --tw-border-opacity: 1;
+    border-left-color: rgb(239 68 68 / var(--tw-border-opacity));
+    border-left-width: 1px;
   }
 
   .last-income {

@@ -35,9 +35,9 @@ export const interestCreditors = derived([creditors, trustedCreditors], ([$credi
 /**
  * Affects how exchange rates behave... will document more later
  */
-export const mainCurrency = writableStorage('config/mainCurrency', get(currencies)[0])
+export const mainCurrency = writableStorage('config/mainCurrency', get(currencies)[0] || '')
 
 /** default account for new expenses */
-export const mainAccount = writableStorage('config/mainAccount', get(accounts)[0])
+export const mainAccount = writableStorage('config/mainAccount', get(accounts)[0] || '')
 
 export const omitIncomeFilters = writableStorage('config/omitIncomeFilters', [] as OmitIncomeFilter[])

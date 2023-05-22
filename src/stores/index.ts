@@ -1,4 +1,5 @@
 export * from './db'
+export * from './dashboard'
 export * from './config'
 export * from './finances'
 export * from './routing'
