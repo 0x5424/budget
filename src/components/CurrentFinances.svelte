@@ -1,7 +1,7 @@
 <script lang=ts>
   import type { Transaction } from 'src/lib/types'
-  import { today, currentPeriodIncome, lastIncomeDate } from 'src/stores'
-  import { lastIncome, nextIncome, previousTransactions, currentPeriodExpenses, currentPeriodDebts, currentPeriodRepayments, netCashFlow, disposableIncome, previousBalance, currentBalance } from 'src/stores'
+  import { today, currentPeriodIncome, lastIncomeDate, accounts } from 'src/stores'
+  import { lastIncome, nextIncome, currentPeriodTransactions, currentPeriodExpenses, currentPeriodDebts, currentPeriodRepayments, netCashFlow, disposableIncome, previousBalance, currentBalance } from 'src/stores'
   import { onMount } from 'svelte'
 
   function sum(txns: Transaction[]) {
@@ -16,6 +16,26 @@
   // take a float representation (eg. 0.335) => 33.5
   function percent(num: number, trailing = 1): string {
     return Number.parseFloat(String(100.0 * Math.abs(num))).toFixed(trailing)
+  }
+
+  // special fn; deduct from balances that reference the account name in `source`
+  function accountBalance(account: string, periodTxns: Transaction[]) {
+    return Math.round(periodTxns.reduce((out, txn) => {
+      // edge case: same account & source == no-op
+      if (txn.account === txn.source) return out
+
+      // if the txn mentions `source`, it's a debit from that account
+      if (txn.source === account) {
+        return out -= txn.rate * txn.amount
+      }
+
+      // if the txn mentions only account, can be either
+      if (txn.account === account) {
+        return out += txn.rate * txn.amount
+      }
+
+      return out
+    }, 0))
   }
 
   // show a single date or a range
@@ -95,6 +115,17 @@
             <span class='font-normal font-sans'>{percent($currentBalance / $previousBalance)}% of previous balance</span>
           </dd>
         </div>
+      </dl>
+
+      <hr class=my-3 />
+
+      <dl class='grid grid-cols-4 gap-y-2'>
+        {#each $accounts as account}
+          <div class='col-span-2'>
+            <dt class='term-account'>{account}</dt>
+            <dd>{accountBalance(account, $currentPeriodTransactions)}</dd>
+          </div>
+        {/each}
       </dl>
     {/if}
   </fieldset>
