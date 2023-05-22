@@ -5,23 +5,26 @@ import { byDate, findLargestIncome, greaterThan, lessThan, omitValues, keepValue
 import { today } from './today'
 import { txns } from './db'
 import { creditors } from './config'
-import { derived } from 'svelte/store'
+import { derived, writable, get } from 'svelte/store'
 
  /** assumption: most recent large income within last 31 days */
-export const lastIncome = derived([today, txns], ([$today, $txns]) => {
-  const thirtyOneDaysAgo = new Date($today.getTime() - 31 * 24 * 60 * 60 * 1000)
-  return findLargestIncome({ before: $today, after: thirtyOneDaysAgo, transactions: $txns })
-})
+function getDefaultLastIncome() {
+  const thirtyOneDaysAgo = new Date(get(today).getTime() - 31 * 24 * 60 * 60 * 1000)
+  return findLargestIncome({ before: get(today), after: thirtyOneDaysAgo, transactions: get(txns) })
+}
+export const lastIncome = writable(getDefaultLastIncome())
 export const lastIncomeDate = derived([lastIncome], ([$lastIncome]) => $lastIncome && new Date($lastIncome.year, $lastIncome.month, $lastIncome.date))
 
 /** assumption: next large income within 31 days of previous income */
-export const nextIncome = derived([lastIncomeDate, txns] , ([$lastIncomeDate, $txns]) => {
+function getDefaultNextIncome() {
+  const startDate = get(lastIncomeDate)
   // edge case: no txns
-  if (!$lastIncomeDate) return
+  if (!startDate) return
 
-  const thirtyOneDaysLater = new Date($lastIncomeDate.getTime() + 31 * 24 * 60 * 60 * 1000)
-  return findLargestIncome({ before: thirtyOneDaysLater, after: $lastIncomeDate, transactions: $txns })
-})
+  const thirtyOneDaysLater = new Date(startDate.getTime() + 31 * 24 * 60 * 60 * 1000)
+  return findLargestIncome({ before: thirtyOneDaysLater, after: startDate, transactions: get(txns) })
+}
+export const nextIncome = writable(getDefaultNextIncome())
 export const nextIncomeDate = derived([nextIncome], ([$nextIncome]) => $nextIncome && new Date($nextIncome.year, $nextIncome.month, $nextIncome.date))
 
 /** definition: all transactions before most recent income */
