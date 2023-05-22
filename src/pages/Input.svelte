@@ -1,8 +1,8 @@
 <script lang=ts>
   import type { Transaction } from 'src/lib/types'
-  import { today, accounts, currencies, mainCurrency, DB, knownAccounts } from 'src/stores'
+  import { today, accounts, currencies, mainCurrency, mainAccount, DB, knownAccounts } from 'src/stores'
 
-  let accountName: string = $knownAccounts[0] || ''
+  let accountName: string = $mainAccount || ''
   let currencyName: string = $mainCurrency || ''
   let rawAmount: void | number
   let rateEquivalent: void | string

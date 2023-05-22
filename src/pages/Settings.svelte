@@ -1,6 +1,6 @@
 <script lang=ts>
   import { DB, accounts, currencies } from 'src/stores'
-  import { creditors, knownAccounts, trustedCreditors, mainCurrency, omitIncomeFilters } from 'src/stores'
+  import { creditors, knownAccounts, trustedCreditors, mainCurrency, mainAccount, omitIncomeFilters } from 'src/stores'
   import Paperclip from 'src/components/Paperclip.svelte'
   import Warning from 'src/components/Warning.svelte'
   import IncomeFilterListItem from 'src/components/IncomeFilterListItem.svelte'
@@ -14,6 +14,10 @@
 
   function toggleMainCurrency(name: string) {
     $mainCurrency = name
+  }
+
+  function toggleMainAccount(name: string) {
+    $mainAccount = name
   }
 
   function toggleCreditor(name: string) {
@@ -163,6 +167,33 @@
                   type=radio
                   checked={$mainCurrency === currencyName}
                   on:change={() => toggleMainCurrency(currencyName)}
+                />
+              </label>
+            </li>
+          {/each}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class='py-6 border-b border-gray-900/01'>
+    <div class='grid grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-8'>
+      <div class='col-span-2 md:col-span-3'>
+        <h3 class='block text-sm font-medium leading-6 mb-1'>Main account</h3>
+        <p class='text-sm leading-6 text-gray-700 md:col-span-2 md:mt-0'>The default account for new transactions.</p>
+      </div>
+
+      <div class='col-span-1 md:col-span-2'>
+        <ul>
+          {#each $accounts as accountName}
+            <li class=my-2>
+              <label>
+                <code class='m-2 account-name'>{accountName}</code>
+                <input
+                  name={`account-${accountName}`}
+                  type=radio
+                  checked={$mainAccount === accountName}
+                  on:change={() => toggleMainAccount(accountName)}
                 />
               </label>
             </li>
