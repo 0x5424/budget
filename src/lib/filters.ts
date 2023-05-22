@@ -49,7 +49,7 @@ export function keepValues({ transactions, key, keep }: { transactions: Transact
 /**
  * given list of transactions, get biggest net inflow (positive)
  */
-export function findLargestIncome({ before, after, transactions }: { before?: Date, after?: Date, transactions: Transaction[] }) {
+export function findLargestIncome({ before, after, transactions }: { before?: Date, after?: Date, transactions: Transaction[] }): void | Transaction {
    return greaterThan(0, byDate({ transactions, before, after })).reduce((prevTxn, txn) => {
     // first iteration will be blank
     if (!prevTxn) return txn
