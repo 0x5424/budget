@@ -3,7 +3,7 @@
   "name": "budget",
   "scripts": {
     "start": "vite",
-    "build": "vite build",
+    "build": "vite build --base=/budget/",
     "preview": "vite preview",
     "check": "svelte-check"
   },
