@@ -1,6 +1,6 @@
 <script lang=ts>
   import type { Transaction } from 'src/lib/types'
-  import { today, currentPeriodIncome, lastIncomeDate, accounts } from 'src/stores'
+  import { today, currentPeriodIncome, lastIncomeDate, nextIncomeDate, accounts } from 'src/stores'
   import { lastIncome, nextIncome, currentPeriodTransactions, currentPeriodExpenses, currentPeriodDebts, currentPeriodRepayments, netCashFlow, disposableIncome, previousBalance, currentBalance } from 'src/stores'
   import { onMount } from 'svelte'
 
@@ -48,7 +48,8 @@
   $: income = sum($currentPeriodIncome)
 
   $: startDate = $lastIncomeDate
-  $: endDate = new Date()
+  $: endDate = $nextIncomeDate
+  $: now = new Date()
   $: dayDiff = !startDate ? 1 : (endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)
 
   $: expensesOnCredit = sum($currentPeriodDebts)
@@ -56,7 +57,7 @@
   $: newExpenses = expensesAuxillary + expensesOnCredit
 
   onMount(() => {
-    const interval = setInterval(() => endDate = new Date(), 5000)
+    const interval = setInterval(() => now = new Date(), 5000)
 
     return () => clearInterval(interval)
   })
