@@ -111,8 +111,8 @@ function namespacedDb(accountNames: string[], initialValue: {}) {
 
   // Add single entry (uses direct object mutation)
   const add = (txn: Transaction) => {
-    if (!value[txn.account]) value[txn.account] = [txn]
-    if (value[txn.account]) value[txn.account].push(txn)
+    if (!value[txn.account]) value[txn.account] = []
+    value[txn.account].push(txn)
 
     set(value)
   }
