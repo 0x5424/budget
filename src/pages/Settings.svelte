@@ -153,7 +153,7 @@
     <div class='grid grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-8'>
       <div class='col-span-2 md:col-span-3'>
         <h3 class='block text-sm font-medium leading-6 mb-1'>Main currency</h3>
-        <p class='text-sm leading-6 text-gray-700 md:col-span-2 md:mt-0'>Select the base currency for the app. This affects dashboard calculations for the current period.</p>
+        <p class='text-sm leading-6 text-gray-700 md:col-span-2 md:mt-0'>The default currency for new transactions. Most importantly, <strong>all transaction exchange rates should be relative to this currency</strong>.</p>
       </div>
 
       <div class='col-span-1 md:col-span-2'>
@@ -207,7 +207,7 @@
     <div class='grid grid-cols-4 md:grid-cols-5 gap-x-2 gap-y-8'>
       <div class='col-span-2 md:col-span-3'>
         <h3 class='block text-sm font-medium leading-6 mb-1'>Creditors</h3>
-        <p class='text-sm leading-6 text-gray-700 md:col-span-2 md:mt-0'>Specify which accounts transact with a monthly balance. Selecting an account here causes their expenses to be deducted from the <em>next</em> month's balance, as a repayment of debt.</p>
+        <p class='text-sm leading-6 text-gray-700 md:col-span-2 md:mt-0'>Specify which accounts transact with a monthly balance. Selecting an account here marks all "income" (transactions with a positive amount) as a repayment of debt.</p>
       </div>
 
       <div class='col-span-2 md:col-span-2'>
@@ -235,7 +235,7 @@
       <div class='grid grid-cols-4 md:grid-cols-5 gap-x-6 gap-y-8'>
         <div class='col-span-2 md:col-span-3'>
           <h3 class='block text-sm font-medium leading-6 mb-1'>High-trust Creditors</h3>
-          <p class='text-sm leading-6 text-gray-700 md:col-span-2 md:mt-0'>A subset of creditors, these accounts charge 0 interest for their loans. Selecting an account here prevents an equivalent repayment expense from being generated in next month's projected balance.</p>
+          <p class='text-sm leading-6 text-gray-700 md:col-span-2 md:mt-0'>A subset of creditors, these accounts charge 0 interest for their loans. Selecting an account here omits their monthly balance from being deducted in the "upcoming expenses" calculation (not done yet).</p>
         </div>
 
         <div class='col-span-2 md:col-span-2'>
@@ -263,9 +263,8 @@
     <section class='py-6 border-b border-gray-900/01'>
       <div class='grid grid-cols-3 md:grid-cols-5 gap-x-6 gap-y-8'>
         <div class='col-span-3 md:col-span-5'>
-          <h3 class='block text-sm font-medium leading-6 mb-1'>Income filters</h3>
-          <p class='text-sm leading-6 text-gray-700 md:col-span-2 md:mt-0'>During monthly calculations of <em>income</em>, any transations matching these conditions will be omitted. <strong>
-          This doesn't affect expense calculation.</strong> currently doesn't work lol</p>
+          <h3 class='block text-sm font-medium leading-6 mb-1'>Categories</h3>
+          <p class='text-sm leading-6 text-gray-700 md:col-span-2 md:mt-0'>Define arbitrary filters to group transactions matching certain parameters. Any transactions matching the filters will be put into the same "category", useful for getting insights on spending patterns. (not done yet lol)</p>
         </div>
 
         <div class='col-span-3 md:col-span-5'>

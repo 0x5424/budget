@@ -1,6 +1,7 @@
 <script lang=ts>
   import type { Transaction } from 'src/lib/types'
   import { today, accounts, currencies, mainCurrency, mainAccount, DB, knownAccounts } from 'src/stores'
+  import { onMount } from 'svelte'
 
   let accountName: string = $mainAccount || ''
   let currencyName: string = $mainCurrency || ''
@@ -28,7 +29,7 @@
   function onSubmit() {
     const multiplyBy = sign ? 1 : -1
     // todo move to a store or smth
-    const formattedRate = rawRate.split('.').slice(0, 2).filter(s => Boolean(s.length)).map(s => s.replaceAll(/\D/g, '')).join('.')
+    const formattedRate = `${rawRate}`.split('.').slice(0, 2).filter(s => Boolean(s.length)).map(s => s.replaceAll(/\D/g, '')).join('.')
     const rateNum = Number(formattedRate)
 
     /**
@@ -66,11 +67,17 @@
     rawAmount = null
     sign = false
     label = ''
+    rateEquivalent = null
     // keep date
   }
+
+  onMount(() => {
+    // set rate onMount without affecting the reactive value's default
+    rawRate = '1'
+  })
 </script>
 
-<form class='container max-w-xl mx-auto px-6' on:submit|preventDefault={onSubmit}>
+<form autocomplete=off class='container max-w-xl mx-auto px-6' on:submit|preventDefault={onSubmit}>
   <section class='py-10 border-b border-gray-900/10'>
     <div class='grid grid-cols-7 md:grid-cols-10 gap-x-5 gap-y-6'>
       <div class='col-span-4 md:col-span-2'>
@@ -81,7 +88,7 @@
             id=account
             name=account
             list={$accounts.length ? 'accounts' : null}
-            class='block w-full rounded-sm sm:text-sm'
+            class='block w-full rounded-sm text-sm'
             placeholder='Or enter new name'
             bind:value={accountName}
           />
@@ -103,7 +110,7 @@
             required
             name=currency
             list=currencies
-            class='block w-full rounded-sm sm:text-sm'
+            class='block w-full rounded-sm text-sm'
             placeholder='Req.'
             bind:value={currencyName}
           />
@@ -133,15 +140,14 @@
             id=rawAmount
             name=rawAmount
             required
-            min=0
-            step=1
+            step=any
             inputmode=decimal
-            class='block w-full rounded-sm sm:text-sm'
+            class='block w-full rounded-sm md:text-sm'
             bind:value={rawAmount}
           />
         </div>
       </div>
-      <div class='col-span-3 md:col-span-3'>
+      <div class='col-span-3'>
         <label for=rawDate class='block text-sm font-medium leading-6'>Exchange Rate <span title=Required/></label>
         <div class=mt-2>
           <input
@@ -151,34 +157,42 @@
             required
             readonly={useRateEquivalent}
             inputmode=decimal
-            class='block w-full rounded-sm sm:text-sm'
+            class='block w-full rounded-sm text-sm'
             class:bg-gray-100={useRateEquivalent}
             bind:value={rawRate}
           />
         </div>
       </div>
-      <div class='col-span-4 md:col-span-3'>
-        <label for=rateEquivalent class='block truncate text-sm font-medium leading-6'>Or, JPY equivalent (todo: suport more)</label>
-        <div class=mt-2>
-          <input
-            type=text
-            id=rateEquivalent
-            name=rateEquivalent
-            inputmode=decimal
-            class='block w-full rounded-sm sm:text-sm'
-            bind:value={rateEquivalent}
-          />
+      {#if currencyName !== $mainCurrency}
+        <div class='col-span-4 md:col-span-3'>
+          <label for=rateEquivalent class='block truncate text-sm font-medium leading-6'>Or, {$mainCurrency} value</label>
+          <div class=mt-2>
+            <input
+              type=text
+              id=rateEquivalent
+              name=rateEquivalent
+              inputmode=decimal
+              class='block w-full rounded-sm text-sm'
+              bind:value={rateEquivalent}
+            />
+          </div>
         </div>
-      </div>
-      <div class='col-span-7 md:col-span-4'>
+      {/if}
+      <div
+        class={
+          currencyName === $mainCurrency ?
+          'col-span-4 md:col-span-7' :
+          'col-span-7 md:col-span-4'
+        }
+      >
         <label for=label class='block text-sm font-medium leading-6'>Label?</label>
         <div class=mt-2>
           <input
             type=text
             id=label
             name=label
-            class='block w-full rounded-sm sm:text-sm'
-            placeholder='Label for personal reference'
+            class='block w-full rounded-sm text-sm'
+            placeholder='For personal reference'
             bind:value={label}
           />
         </div>

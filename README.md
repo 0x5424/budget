@@ -14,7 +14,6 @@ Having tried a few online budgeting apps, I never found the exact combination of
 ## todo
 
 - [ ] a11y
-- [ ] Add "value" input instead of jpyEquivalent
 - [ ] in-app documentation
   - [ ] tutorial?
 
