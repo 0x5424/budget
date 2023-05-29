@@ -117,6 +117,19 @@ function namespacedDb(accountNames: string[], initialValue: {}) {
     set(value)
   }
 
+  // Reinitialize the DB from ledger state
+  const reinitialize = (txns: Transaction[]) => {
+    cleanStorage()
+
+    value = txns.reduce((out, txn) => {
+      if (!out[txn.account]) out[txn.account] = []
+      out[txn.account].push(txn)
+      return out
+    }, {})
+
+    set(value)
+  }
+
   /**
    * Cleanup localStorage, removing all currently known accounts.
    *
@@ -130,7 +143,7 @@ function namespacedDb(accountNames: string[], initialValue: {}) {
     })
   }
 
-  return { subscribe, set, update, add, cleanStorage }
+  return { subscribe, set, update, add, cleanStorage, reinitialize }
 }
 export const DB = namespacedDb(get(knownAccounts), {})
 
