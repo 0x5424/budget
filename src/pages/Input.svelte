@@ -1,15 +1,16 @@
 <script lang=ts>
   import type { Transaction } from 'src/lib/types'
-  import { today, accounts, currencies, mainCurrency, mainAccount, DB, knownAccounts } from 'src/stores'
+  import { today, accounts, currencies, mainCurrency, mainAccount, DB, txns, knownAccounts } from 'src/stores'
   import { onMount } from 'svelte'
 
   export let transaction: void | Transaction = null
+  export let afterSubmit: () => void = () => {}
 
   let accountName: string = transaction ? transaction.account : $mainAccount || ''
   let currencyName: string = transaction ? transaction.currency : $mainCurrency || ''
-  let rawAmount: void | number = transaction ? transaction.amount : null
+  let rawAmount: void | number = transaction ? Math.abs(transaction.amount) : null
   let rateEquivalent: void | string
-  let sign = false
+  let sign = transaction ? transaction.amount > 0 : false
   let rawLabel = transaction ? transaction.label : ''
   let date: string = transaction ? `${transaction.year}-${`${transaction.month + 1}`.padStart(2, '0')}-${`${transaction.date}`.padStart(2, '0')}` : $today.toISOString().slice(0, 10)
 
@@ -55,8 +56,14 @@
     if (rawLabel !== '') newEntry.label = rawLabel
 
     /** update stores */
-    DB.cleanStorage()
-    DB.add(newEntry)
+    const newLedger = !transaction ? $txns : $txns.filter(txn => {
+      // remove the entry matching the passed-in prop
+      return JSON.stringify(txn) !== JSON.stringify(transaction)
+    })
+
+    newLedger.push(newEntry)
+    DB.reinitialize(newLedger)
+
     if (!$knownAccounts.includes(accountName)) $knownAccounts = [...$knownAccounts, accountName]
     if ($mainAccount === '') $mainAccount = accountName
     if ($mainCurrency === '') $mainCurrency = currencyName
@@ -71,6 +78,8 @@
     rawLabel = ''
     rateEquivalent = null
     // keep date
+
+    afterSubmit()
   }
 
   onMount(() => {

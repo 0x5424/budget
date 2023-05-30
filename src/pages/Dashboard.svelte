@@ -30,7 +30,10 @@
 <div>
   {#key selectedTxnIdx}
     <dialog class='m-auto p-0' bind:this={dialog}>
-      <Input transaction={sortedTxns[selectedTxnIdx] ? {...sortedTxns[selectedTxnIdx]} : null}>
+      <Input
+        transaction={sortedTxns[selectedTxnIdx] ? {...sortedTxns[selectedTxnIdx]} : null}
+        afterSubmit={() => dialog.close()}
+      >
         <button
           type=button
           slot=cancelButton
