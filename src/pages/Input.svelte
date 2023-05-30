@@ -3,13 +3,15 @@
   import { today, accounts, currencies, mainCurrency, mainAccount, DB, knownAccounts } from 'src/stores'
   import { onMount } from 'svelte'
 
-  let accountName: string = $mainAccount || ''
-  let currencyName: string = $mainCurrency || ''
-  let rawAmount: void | number
+  export let transaction: void | Transaction = null
+
+  let accountName: string = transaction ? transaction.account : $mainAccount || ''
+  let currencyName: string = transaction ? transaction.currency : $mainCurrency || ''
+  let rawAmount: void | number = transaction ? transaction.amount : null
   let rateEquivalent: void | string
   let sign = false
-  let label = ''
-  let date: string = $today.toISOString().slice(0, 10)
+  let rawLabel = transaction ? transaction.label : ''
+  let date: string = transaction ? `${transaction.year}-${`${transaction.month + 1}`.padStart(2, '0')}-${`${transaction.date}`.padStart(2, '0')}` : $today.toISOString().slice(0, 10)
 
   // rate is reactive in the event an "equivalent" is provided
   $: useRateEquivalent = Boolean(rawAmount && rateEquivalent)
@@ -20,7 +22,7 @@
   //     accountName,
   //     currencyName,
   //     rawAmount,
-  //     label,
+  //     rawLabel,
   //     sign,
   //     date,
   //   })
@@ -50,7 +52,7 @@
       rate: rateToPersist
     }
 
-    if (label !== '') newEntry.label = label
+    if (rawLabel !== '') newEntry.label = rawLabel
 
     /** update stores */
     DB.cleanStorage()
@@ -66,7 +68,7 @@
     // keep account, currency
     rawAmount = null
     sign = false
-    label = ''
+    rawLabel = ''
     rateEquivalent = null
     // keep date
   }
@@ -193,14 +195,18 @@
             name=label
             class='block w-full rounded-sm text-sm'
             placeholder='For personal reference'
-            bind:value={label}
+            bind:value={rawLabel}
           />
         </div>
       </div>
     </div>
   </section>
   <section class='py-8 grid grid-cols-4'>
-    <div class='col-span-3 flex justify-end'>
+    <div
+      class='flex justify-end'
+      class:col-span-3={!$$slots.cancelButton}
+      class:col-span-2={$$slots.cancelButton}
+    >
       <input
         type=date
         id=entryDate
@@ -209,6 +215,11 @@
         class='rounded-sm sm:text-sm'
       />
     </div>
+    {#if $$slots.cancelButton}
+      <div class='flex justify-end'>
+        <slot name=cancelButton />
+      </div>
+    {/if}
     <div class='flex justify-end'>
       <button
         type=submit
