@@ -7,6 +7,7 @@
   export let afterSubmit: () => void = () => {}
 
   let accountName: string = transaction ? transaction.account : $mainAccount || ''
+  let sourceName: string = transaction ? transaction.source : ''
   let currencyName: string = transaction ? transaction.currency : $mainCurrency || ''
   let rawAmount: void | number = transaction ? Math.abs(transaction.amount) : null
   let rateEquivalent: void | string
@@ -54,6 +55,7 @@
     }
 
     if (rawLabel !== '') newEntry.label = rawLabel
+    if (sourceName !== '') newEntry.source = sourceName
 
     /** update stores */
     const newLedger = !transaction ? $txns : $txns.filter(txn => {
@@ -76,6 +78,7 @@
     rawAmount = null
     sign = false
     rawLabel = ''
+    sourceName = ''
     rateEquivalent = null
     // keep date
 
@@ -211,25 +214,48 @@
     </div>
   </section>
   <section class='py-8 grid grid-cols-4'>
+    <div>
+      <label for=source class='block text-sm font-medium leading-6'>From?</label>
+      <div class=mt-2>
+        <input
+          type=text
+          id=source
+          name=source
+          class='block w-full rounded-sm text-sm'
+          list={$accounts.length ? 'accounts' : null}
+          bind:value={sourceName}
+        />
+        {#if $accounts.length}
+          <datalist id=accounts>
+            {#each $accounts as accountName}
+              <option value={accountName} />
+            {/each}
+          </datalist>
+        {/if}
+      </div>
+    </div>
     <div
-      class='flex justify-end'
-      class:col-span-3={!$$slots.cancelButton}
-      class:col-span-2={$$slots.cancelButton}
+      class='mt-auto ml-auto'
+      class:col-span-2={!$$slots.cancelButton}
+      class:col-span-1={$$slots.cancelButton}
     >
-      <input
-        type=date
-        id=entryDate
-        name=entryDate
-        bind:value={date}
-        class='rounded-sm sm:text-sm'
-      />
+      <label for=source class='block text-sm font-medium leading-6'>Date</label>
+      <div class=mt-2>
+        <input
+          type=date
+          id=entryDate
+          name=entryDate
+          bind:value={date}
+          class='rounded-sm sm:text-sm'
+        />
+      </div>
     </div>
     {#if $$slots.cancelButton}
-      <div class='flex justify-end'>
+      <div class='mt-auto ml-auto'>
         <slot name=cancelButton />
       </div>
     {/if}
-    <div class='flex justify-end'>
+    <div class='mt-auto ml-auto'>
       <button
         type=submit
         disabled={currencyName === '' || !rawAmount || accountName === ''}
