@@ -84,7 +84,7 @@
 
   onMount(() => {
     // set rate onMount without affecting the reactive value's default
-    rawRate = '1'
+    rawRate = transaction ? `${transaction.rate}` : '1'
   })
 </script>
 
