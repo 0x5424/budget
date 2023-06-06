@@ -2,7 +2,7 @@
   import { ALL_PAGES, currentPage } from 'src/stores'
 </script>
 
-<header>
+<header class=mb-4>
   <nav>
     <ul>
       {#each ALL_PAGES as pageName}

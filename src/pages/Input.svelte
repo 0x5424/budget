@@ -7,6 +7,7 @@
   export let afterSubmit: () => void = () => {}
 
   let accountName: string = transaction ? transaction.account : $mainAccount || ''
+  let showSource = false
   let sourceName: string = transaction ? transaction.source : ''
   let currencyName: string = transaction ? transaction.currency : $mainCurrency || ''
   let rawAmount: void | number = transaction ? Math.abs(transaction.amount) : null
@@ -91,11 +92,39 @@
   })
 </script>
 
-<form autocomplete=off class='container max-w-xl mx-auto px-6' on:submit|preventDefault={onSubmit}>
-  <section class='py-10 border-b border-gray-900/10'>
-    <div class='grid grid-cols-7 md:grid-cols-10 gap-x-5 gap-y-6'>
-      <div class='col-span-4 md:col-span-2'>
-        <label for=account class='block text-sm font-medium leading-6'>Account <span title=Required/></label>
+<form autocomplete=off class='container max-w-md mx-auto p-4' on:submit|preventDefault={onSubmit}>
+  <section class='grid grid-cols-3 gap-x-2 gap-y-4'>
+    <div class='col-span-3 flex gap-2'>
+      <label for=source class='text-sm font-medium leading-6'>
+        Source?
+        <div class=mt-2>
+          {#if showSource}
+            <input
+              type=text
+              id=source
+              name=source
+              class='block w-full rounded-sm text-sm'
+              list={$accounts.length ? 'accounts' : null}
+              bind:value={sourceName}
+            />
+            {#if $accounts.length}
+              <datalist id=accounts>
+                {#each $accounts as accountName}
+                  <option value={accountName} />
+                {/each}
+              </datalist>
+            {/if}
+          {:else}
+            <input id=source name=source type=checkbox class='mx-3 my-2 rounded-sm' bind:checked={showSource}>
+            <p class='text-xs font-normal text-gray-500'>
+              Transfer or repayment?
+            </p>
+          {/if}
+        </div>
+      </label>
+
+      <label for=account class='text-sm font-medium leading-6'>
+        Account <span title=Required />
         <div class=mt-2>
           <input
             type=text
@@ -114,9 +143,25 @@
             </datalist>
           {/if}
         </div>
-      </div>
-      <div class='col-span-3 md:col-span-2'>
-        <label for=currency class='block text-sm font-medium leading-6'>Currency <span title=Required/></label>
+      </label>
+
+      <label for=entryDate class='shrink-0 text-sm font-medium leading-6'>
+        Date
+        <div class=mt-2>
+          <input
+            type=date
+            id=entryDate
+            name=entryDate
+            bind:value={date}
+            class='rounded-sm text-sm'
+          />
+        </div>
+      </label>
+    </div>
+
+    <div class='col-span-2 flex gap-2'>
+      <label for=currency class='w-40 text-sm font-medium leading-6'>
+        Currency <span title=Required />
         <div class=mt-2>
           <input
             type=text
@@ -136,19 +181,11 @@
             </datalist>
           {/if}
         </div>
-      </div>
-      <div class='col-span-2 md:col-span-2'>
-        <label class='flex flex-col text-sm font-medium leading-6'>
-          Income?
-          <input id=sign name=sign type=checkbox class='mx-3 my-2 rounded-sm' bind:checked={sign}>
-          <p class='text-xs font-normal text-gray-500'>
-            {sign ? 'Salary, dividends, etc' : 'This is an expense'}.
-          </p>
-        </label>
-      </div>
-      <div class='col-span-5 md:col-span-4'>
-        <label for=rawAmount class='block text-sm font-medium leading-6'>Amount <span title=Required/></label>
-        <div class=mt-2>
+      </label>
+
+      <label for=rawAmount class='text-sm font-medium leading-6'>
+        Amount <span title=Required />
+        <div class='mt-2'>
           <input
             type=number
             id=rawAmount
@@ -156,30 +193,27 @@
             required
             step=any
             inputmode=decimal
-            class='block w-full rounded-sm md:text-sm'
+            class='block w-full rounded-sm text-sm'
             bind:value={rawAmount}
           />
         </div>
-      </div>
-      <div class='col-span-3'>
-        <label for=rawDate class='block text-sm font-medium leading-6'>Exchange Rate <span title=Required/></label>
-        <div class=mt-2>
-          <input
-            type=text
-            id=rawRate
-            name=rawRate
-            required
-            readonly={useRateEquivalent || currencyName === $mainCurrency}
-            inputmode=decimal
-            class='block w-full rounded-sm text-sm'
-            class:bg-gray-100={useRateEquivalent || currencyName === $mainCurrency}
-            bind:value={rawRate}
-          />
-        </div>
-      </div>
-      {#if currencyName !== $mainCurrency}
-        <div class='col-span-4 md:col-span-3'>
-          <label for=rateEquivalent class='block truncate text-sm font-medium leading-6'>Or, {$mainCurrency} value</label>
+      </label>
+    </div>
+
+    <div class='col-span-1'>
+      <label class='text-sm font-medium leading-6'>
+        Income?
+        <input id=sign name=sign type=checkbox class='mx-3 my-2 rounded-sm' bind:checked={sign}>
+        <p class='text-xs font-normal text-gray-500'>
+          {sign ? 'Salary, dividends, etc' : 'This is an expense'}.
+        </p>
+      </label>
+    </div>
+
+    {#if currencyName !== $mainCurrency}
+      <div class='col-span-3 flex flex-row-reverse items-end gap-2'>
+        <label for=rateEquivalent class='text-sm font-medium leading-6'>
+          Or, {$mainCurrency} value
           <div class=mt-2>
             <input
               type=text
@@ -190,16 +224,30 @@
               bind:value={rateEquivalent}
             />
           </div>
-        </div>
-      {/if}
-      <div
-        class={
-          currencyName === $mainCurrency ?
-          'col-span-4 md:col-span-7' :
-          'col-span-7 md:col-span-4'
-        }
-      >
-        <label for=label class='block text-sm font-medium leading-6'>Label?</label>
+        </label>
+
+        <label for=rawDate class='text-sm font-medium leading-6'>
+          Exchange Rate <span title=Required />
+          <div class=mt-2>
+            <input
+              type=text
+              id=rawRate
+              name=rawRate
+              required
+              readonly={useRateEquivalent}
+              inputmode=decimal
+              class='block w-full rounded-sm text-sm'
+              class:bg-gray-100={useRateEquivalent}
+              bind:value={rawRate}
+            />
+          </div>
+        </label>
+      </div>
+    {/if}
+
+    <div class='col-span-3'>
+      <label for=label class='text-sm font-medium leading-6'>
+        Label?
         <div class=mt-2>
           <input
             type=text
@@ -210,52 +258,49 @@
             bind:value={rawLabel}
           />
         </div>
+      </label>
+    </div>
+  </section>
+
+  <section class='pb-6 border-b border-gray-900/10'>
+    <div class='grid grid-cols-12 md:grid-cols-10 gap-x-4 gap-y-4'>
+
+      <div class='col-span-3 md:col-span-2'>
+      </div>
+
+
+      <div class='col-span-4 md:col-span-4'>
+
+      </div>
+
+      <div class='col-span-3'>
+
+      </div>
+
+      {#if currencyName !== $mainCurrency}
+        <div class='col-span-4 md:col-span-3'>
+        </div>
+      {/if}
+      <div
+        class={
+          currencyName === $mainCurrency ?
+          'col-span-4 md:col-span-7' :
+          'col-span-7 md:col-span-4'
+        }
+      >
       </div>
     </div>
   </section>
-  <section class='py-8 grid grid-cols-4'>
-    <div>
-      <label for=source class='block text-sm font-medium leading-6'>From?</label>
-      <div class=mt-2>
-        <input
-          type=text
-          id=source
-          name=source
-          class='block w-full rounded-sm text-sm'
-          list={$accounts.length ? 'accounts' : null}
-          bind:value={sourceName}
-        />
-        {#if $accounts.length}
-          <datalist id=accounts>
-            {#each $accounts as accountName}
-              <option value={accountName} />
-            {/each}
-          </datalist>
-        {/if}
-      </div>
-    </div>
+
+  <section class='py-6 grid grid-cols-4'>
     <div
       class='mt-auto ml-auto'
-      class:col-span-2={!$$slots.cancelButton}
-      class:col-span-1={$$slots.cancelButton}
+      class:col-span-1={!$$slots.cancelButton}
+      class:col-span-2={$$slots.cancelButton}
     >
-      <label for=source class='block text-sm font-medium leading-6'>Date</label>
-      <div class=mt-2>
-        <input
-          type=date
-          id=entryDate
-          name=entryDate
-          bind:value={date}
-          class='rounded-sm sm:text-sm'
-        />
-      </div>
-    </div>
-    {#if $$slots.cancelButton}
-      <div class='mt-auto ml-auto'>
+      {#if $$slots.cancelButton}
         <slot name=cancelButton />
-      </div>
-    {/if}
-    <div class='mt-auto ml-auto'>
+      {/if}
       <button
         type=submit
         disabled={currencyName === '' || !rawAmount || accountName === ''}
