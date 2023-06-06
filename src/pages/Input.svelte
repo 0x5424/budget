@@ -169,10 +169,10 @@
             id=rawRate
             name=rawRate
             required
-            readonly={useRateEquivalent}
+            readonly={useRateEquivalent || currencyName === $mainCurrency}
             inputmode=decimal
             class='block w-full rounded-sm text-sm'
-            class:bg-gray-100={useRateEquivalent}
+            class:bg-gray-100={useRateEquivalent || currencyName === $mainCurrency}
             bind:value={rawRate}
           />
         </div>
