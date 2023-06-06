@@ -1,6 +1,6 @@
 <script lang=ts>
   import type { Transaction } from 'src/lib/types'
-  import { today, accounts, currencies, mainCurrency, mainAccount, DB, txns, knownAccounts } from 'src/stores'
+  import { today, accounts, creditors, currencies, mainCurrency, mainAccount, DB, txns, knownAccounts } from 'src/stores'
   import { onMount } from 'svelte'
 
   export let transaction: void | Transaction = null
@@ -86,6 +86,23 @@
     afterSubmit()
   }
 
+  $: sourceLabel = $creditors.includes(accountName) ? 'Repayment?' : 'Transfer to self?'
+  $: incomeLabel = (() => {
+    if ($creditors.includes(accountName)) return 'Repayment?'
+    return 'Income?'
+  })()
+
+  $: incomeDescription = (() => {
+    if ($creditors.includes(accountName)) {
+      // input is positive = repayment
+      if (sign) return 'A credit repayment.'
+      return 'An expense made on credit.'
+    }
+
+    if (sign) return 'Salary, dividends, etc.'
+    return 'This is an expense.'
+  })()
+
   onMount(() => {
     // set rate onMount without affecting the reactive value's default
     rawRate = transaction ? `${transaction.rate}` : '1'
@@ -95,7 +112,7 @@
 <form autocomplete=off class='container max-w-md mx-auto p-4' on:submit|preventDefault={onSubmit}>
   <section class='grid grid-cols-3 gap-x-2 gap-y-4'>
     <div class='col-span-3 flex gap-2'>
-      <label for=source class='text-sm font-medium leading-6'>
+      <label for=source class='mr-auto text-sm font-medium leading-6'>
         Source?
         <div class=mt-2>
           {#if showSource}
@@ -117,13 +134,13 @@
           {:else}
             <input id=source name=source type=checkbox class='mx-3 my-2 rounded-sm' bind:checked={showSource}>
             <p class='text-xs font-normal text-gray-500'>
-              Transfer or repayment?
+              {sourceLabel}
             </p>
           {/if}
         </div>
       </label>
 
-      <label for=account class='text-sm font-medium leading-6'>
+      <label for=account class='max-w-[33%] text-sm font-medium leading-6'>
         Account <span title=Required />
         <div class=mt-2>
           <input
@@ -202,10 +219,10 @@
 
     <div class='col-span-1'>
       <label class='text-sm font-medium leading-6'>
-        Income?
+        {incomeLabel}
         <input id=sign name=sign type=checkbox class='mx-3 my-2 rounded-sm' bind:checked={sign}>
         <p class='text-xs font-normal text-gray-500'>
-          {sign ? 'Salary, dividends, etc' : 'This is an expense'}.
+          {incomeDescription}
         </p>
       </label>
     </div>
