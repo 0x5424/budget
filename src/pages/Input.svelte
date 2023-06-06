@@ -1,6 +1,6 @@
 <script lang=ts>
   import type { Transaction } from 'src/lib/types'
-  import { today, accounts, creditors, currencies, mainCurrency, mainAccount, DB, txns, knownAccounts } from 'src/stores'
+  import { today, accounts, creditors, currencies, mainCurrency, mainAccount, DB, txns, knownAccounts, topThreeAccounts } from 'src/stores'
   import { onMount } from 'svelte'
 
   export let transaction: void | Transaction = null
@@ -140,27 +140,41 @@
         </div>
       </label>
 
-      <label for=account class='max-w-[33%] text-sm font-medium leading-6'>
-        Account <span title=Required />
-        <div class=mt-2>
-          <input
-            type=text
-            id=account
-            name=account
-            list={$accounts.length ? 'accounts' : null}
-            class='block w-full rounded-sm text-sm'
-            placeholder='Or enter new name'
-            bind:value={accountName}
-          />
-          {#if $accounts.length}
-            <datalist id=accounts>
-              {#each $accounts as accountName}
-                <option value={accountName} />
-              {/each}
-            </datalist>
-          {/if}
+      <div class='max-w-[33%] text-sm font-medium'>
+        <label for=account class='leading-6'>
+          Account <span title=Required />
+          <div class=mt-2>
+            <input
+              type=text
+              id=account
+              name=account
+              list={$accounts.length ? 'accounts' : null}
+              class='block w-full rounded-sm text-sm'
+              placeholder='Or enter new name'
+              bind:value={accountName}
+            />
+            {#if $accounts.length}
+              <datalist id=accounts>
+                {#each $accounts as accountName}
+                  <option value={accountName} />
+                {/each}
+              </datalist>
+            {/if}
+          </div>
+        </label>
+
+        <div class='mt-2 flex justify-between'>
+          {#each $topThreeAccounts.filter((v) => v !== accountName) as accName}
+            <button
+              type=button
+              class='border p-1'
+              on:click={() => accountName = accName}
+            >
+              {accName}
+            </button>
+          {/each}
         </div>
-      </label>
+      </div>
 
       <label for=entryDate class='shrink-0 text-sm font-medium leading-6'>
         Date

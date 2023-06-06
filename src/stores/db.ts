@@ -164,10 +164,17 @@ export const txns = derived([DB], ([$DB]) => {
 
 /** list of actual accounts present, derived from parsed entries */
 export const accounts = derived([txns], ([$txns]) => {
-  return Array.from(new Set(getDbAttributes($txns, 'account')))
+  return [...new Set(getDbAttributes($txns, 'account'))]
+})
+
+/** top three accounts by usage */
+export const topThreeAccounts = derived([DB], ([$DB]) => {
+  return Object.entries($DB).sort(([accA, txnsA], [accB, txnsB]) => {
+    return 0 - Number(txnsA.length > txnsB.length)
+  }).map(([accountName]) => accountName).slice(0, 3)
 })
 
 /** list of all known currencies, derived from parsed entries */
 export const currencies = derived([txns], ([$txns]) => {
-  return Array.from(new Set(getDbAttributes($txns, 'currency')))
+  return [...new Set(getDbAttributes($txns, 'currency'))]
 })
